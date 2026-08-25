@@ -15,8 +15,10 @@ const ProfilePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if(!selectedImg){
-      await updateProfile({fullName: name, bio});
-      navigate('/');
+      const success = await updateProfile({fullName: name, bio});
+      if(success){
+        navigate('/');
+      }
       return;
     }
 
@@ -24,8 +26,10 @@ const ProfilePage = () => {
     reader.readAsDataURL(selectedImg);
     reader.onload = async () => {
       const base64Image = reader.result;
-      await updateProfile({profilePic: base64Image, fullName: name, bio});
-      navigate('/');
+      const success = await updateProfile({profilePic: base64Image, fullName: name, bio});
+      if(success){
+        navigate('/');
+      }
     }
 
   }
