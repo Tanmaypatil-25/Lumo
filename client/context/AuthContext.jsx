@@ -89,7 +89,8 @@ export const AuthProvider = ({ children }) => {
         const newSocket = io(backendUrl, {
             auth: {
                 token: authToken
-            }
+            },
+            transports: ["websocket"]
         });
 
         setSocket(newSocket);
