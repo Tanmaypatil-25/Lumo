@@ -8,32 +8,47 @@ import mongoose from "mongoose";
 export const getUsersForSidebar = async (req, res) => {
     try {
         const userId = req.user._id;
-        const filteredUsers = await User.find({ _id: { $ne: userId } }).select("-password");
 
-        // count number of unseen messages
-        const unseenMessages = {}
-        const promises = filteredUsers.map(async (user) => {
-            const messages = await Message.find({ senderId: user._id, recieverId: userId, seen: false })
+        const filteredUsers = await User.find({
+            _id: { $ne: userId }
+        }).select("-password");
 
-            if (messages.length > 0) {
-                unseenMessages[user._id] = messages.length;
+        const unreadCounts = await Message.aggregate([
+            {
+                $match: {
+                    recieverId: userId,
+                    seen: false
+                }
+            },
+            {
+                $group: {
+                    _id: "$senderId",
+                    count: { $sum: 1 }
+                }
             }
-        })
+        ]);
 
-        await Promise.all(promises);
+        const unseenMessages = {};
+
+        unreadCounts.forEach((item) => {
+            unseenMessages[item._id.toString()] = item.count;
+        });
+
         return res.status(200).json({
             success: true,
             users: filteredUsers,
             unseenMessages
         });
+
     } catch (error) {
-        console.log(error.message)
+        console.log(error.message);
+
         return res.status(500).json({
             success: false,
             message: "Internal server error"
         });
     }
-}
+};
 
 // Get all messages for selected user 
 export const getMessages = async (req, res) => {
@@ -41,26 +56,66 @@ export const getMessages = async (req, res) => {
         const { id: selectedUserId } = req.params;
         const myId = req.user._id;
 
-        const messages = await Message.find({
-            $or: [
-                { senderId: myId, recieverId: selectedUserId },
-                { senderId: selectedUserId, recieverId: myId },
-            ]
-        })
+        const page = Math.max(
+            parseInt(req.query.page) || 1,
+            1
+        );
 
-        await Message.updateMany({ senderId: selectedUserId, recieverId: myId }, { seen: true });
+        const limit = Math.min(
+            parseInt(req.query.limit) || 20,
+            50
+        );
+
+        const skip = (page - 1) * limit;
+
+        const query = {
+            $or: [
+                {
+                    senderId: myId,
+                    recieverId: selectedUserId
+                },
+                {
+                    senderId: selectedUserId,
+                    recieverId: myId
+                }
+            ]
+        };
+
+        const messages = await Message.find(query)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        await Message.updateMany(
+            {
+                senderId: selectedUserId,
+                recieverId: myId,
+                seen: false
+            },
+            {
+                seen: true
+            }
+        );
+
         return res.status(200).json({
             success: true,
-            messages
+
+            // reverse because DB query fetched newest first
+            messages: messages.reverse(),
+
+            page,
+            hasMore: messages.length === limit
         });
+
     } catch (error) {
-        console.log(error.message)
+        console.log(error.message);
+
         return res.status(500).json({
             success: false,
             message: "Internal server error"
         });
     }
-}
+};
 
 // api to mark messages seen using message id
 export const markMessagesAsSeen = async (req, res) => {

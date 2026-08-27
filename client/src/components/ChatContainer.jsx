@@ -7,11 +7,24 @@ import toast from 'react-hot-toast'
 
 const ChatContainer = () => {
 
-  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages, setMessages, messagesLoading } = useContext(ChatContext)
+  const {
+    messages,
+    setMessages,
+    selectedUser,
+    setSelectedUser,
+    sendMessage,
+    getMessages,
+    loadOlderMessages,
+    hasMoreMessages,
+    messagesLoading,
+    loadingOlderMessages
+  } = useContext(ChatContext);
+
   const { authUser, onlineUsers } = useContext(AuthContext)
 
 
 
+  const messagesContainerRef = useRef(null);
   const scrollEnd = useRef();
 
   const [input, setInput] = useState('');
@@ -36,6 +49,30 @@ const ChatContainer = () => {
     }
 
     setSending(false);
+  };
+
+  // Handle scrolling
+  const handleScroll = async () => {
+    const container = messagesContainerRef.current;
+
+    if (!container) return;
+
+    if (
+      container.scrollTop <= 50 &&
+      hasMoreMessages &&
+      !messagesLoading
+    ) {
+      const previousScrollHeight = container.scrollHeight;
+
+      await loadOlderMessages();
+
+      requestAnimationFrame(() => {
+        const newScrollHeight = container.scrollHeight;
+
+        container.scrollTop =
+          newScrollHeight - previousScrollHeight;
+      });
+    }
   };
 
   const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2 MB
@@ -113,10 +150,16 @@ const ChatContainer = () => {
   }, [selectedUser]);
 
   useEffect(() => {
-    if (scrollEnd.current && messages) {
-      scrollEnd.current.scrollIntoView({ behavior: "smooth" })
+    if (
+      scrollEnd.current &&
+      messages.length > 0 &&
+      !loadingOlderMessages
+    ) {
+      scrollEnd.current.scrollIntoView({
+        behavior: "smooth"
+      });
     }
-  }, [messages]);
+  }, [messages.length, loadingOlderMessages]);
 
   return selectedUser ? (
     <div className='h-full overflow-scroll relative backdrop-blur-lg'>
@@ -132,7 +175,11 @@ const ChatContainer = () => {
       </div>
 
       {/* ------ chat_area ------ */}
-      <div className='flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6'>
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className='flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6'
+      >
         {messages.map((msg, index) => (
           <div key={index} className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && 'flex-row-reverse'}`}>
             {msg.image ? (

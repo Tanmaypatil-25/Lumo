@@ -11,6 +11,9 @@ export const ChatProvider = ({ children }) => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [unseenMessages, setUnseenMessages] = useState({});
     const [messagesLoading, setMessagesLoading] = useState(false);
+    const [messagePage, setMessagePage] = useState(1);
+    const [hasMoreMessages, setHasMoreMessages] = useState(true);
+    const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
 
     const { socket, axios, authUser } = useContext(AuthContext);
 
@@ -41,7 +44,13 @@ export const ChatProvider = ({ children }) => {
 
             const { data } = await axios.get(
                 `/api/messages/${userId}`,
-                { signal }
+                {
+                    params: {
+                        page: 1,
+                        limit: 20
+                    },
+                    signal
+                }
             );
 
             if (
@@ -49,6 +58,9 @@ export const ChatProvider = ({ children }) => {
                 requestId === latestMessagesRequest.current
             ) {
                 setMessages(data.messages);
+
+                setMessagePage(1);
+                setHasMoreMessages(data.hasMore);
 
                 setUnseenMessages(prev => ({
                     ...prev,
@@ -75,6 +87,52 @@ export const ChatProvider = ({ children }) => {
             if (requestId === latestMessagesRequest.current) {
                 setMessagesLoading(false);
             }
+        }
+    };
+
+    const loadOlderMessages = async () => {
+        if (
+            !selectedUser ||
+            !hasMoreMessages ||
+            messagesLoading
+        ) {
+            return;
+        }
+
+        const nextPage = messagePage + 1;
+
+        try {
+            setMessagesLoading(true);
+            setLoadingOlderMessages(true);
+
+            const { data } = await axios.get(
+                `/api/messages/${selectedUser._id}`,
+                {
+                    params: {
+                        page: nextPage,
+                        limit: 20
+                    }
+                }
+            );
+
+            if (data.success) {
+                setMessages(prev => [
+                    ...data.messages,
+                    ...prev
+                ]);
+
+                setMessagePage(nextPage);
+                setHasMoreMessages(data.hasMore);
+            }
+
+        } catch (error) {
+            toast.error(
+                error.response?.data?.message ||
+                error.message
+            );
+        } finally {
+            setMessagesLoading(false);
+            setLoadingOlderMessages(false);
         }
     };
 
@@ -209,6 +267,12 @@ export const ChatProvider = ({ children }) => {
         messages,
         setMessages,
         messagesLoading,
+
+        messagePage,
+        hasMoreMessages,
+        loadOlderMessages,
+        loadingOlderMessages,
+
         users,
         selectedUser,
         getUsers,
