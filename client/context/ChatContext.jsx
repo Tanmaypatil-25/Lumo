@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import toast from "react-hot-toast";
 
@@ -10,8 +10,11 @@ export const ChatProvider = ({ children }) => {
     const [users, setUsers] = useState([]);
     const [selectedUser, setSelectedUser] = useState(null);
     const [unseenMessages, setUnseenMessages] = useState({});
+    const [messagesLoading, setMessagesLoading] = useState(false);
 
-    const { socket, axios } = useContext(AuthContext);
+    const { socket, axios, authUser } = useContext(AuthContext);
+
+    const latestMessagesRequest = useRef(0);
 
     const getUsers = async () => {
         try {
@@ -30,19 +33,48 @@ export const ChatProvider = ({ children }) => {
         }
     };
 
-    const getMessages = async (userId) => {
-        try {
-            const { data } =
-                await axios.get(`/api/messages/${userId}`);
+    const getMessages = async (userId, signal) => {
+        const requestId = ++latestMessagesRequest.current;
 
-            if (data.success) {
-                setMessages(data.messages);
-            }
-        } catch (error) {
-            toast.error(
-                error.response?.data?.message ||
-                error.message
+        try {
+            setMessagesLoading(true);
+
+            const { data } = await axios.get(
+                `/api/messages/${userId}`,
+                { signal }
             );
+
+            if (
+                data.success &&
+                requestId === latestMessagesRequest.current
+            ) {
+                setMessages(data.messages);
+
+                setUnseenMessages(prev => ({
+                    ...prev,
+                    [userId]: 0
+                }));
+            }
+
+        } catch (error) {
+            if (
+                error.name === "CanceledError" ||
+                error.code === "ERR_CANCELED"
+            ) {
+                return;
+            }
+
+            if (requestId === latestMessagesRequest.current) {
+                toast.error(
+                    error.response?.data?.message ||
+                    error.message
+                );
+            }
+
+        } finally {
+            if (requestId === latestMessagesRequest.current) {
+                setMessagesLoading(false);
+            }
         }
     };
 
@@ -56,10 +88,7 @@ export const ChatProvider = ({ children }) => {
             );
 
             if (data.success) {
-                setMessages(prev => [
-                    ...prev,
-                    data.newMessage
-                ]);
+                appendMessageIfNew(data.newMessage);
 
                 return true;
             }
@@ -76,6 +105,30 @@ export const ChatProvider = ({ children }) => {
         }
     };
 
+    const appendMessageIfNew = (newMessage) => {
+        setMessages(prev => {
+            const alreadyExists = prev.some(
+                msg => msg._id === newMessage._id
+            );
+
+            if (alreadyExists) {
+                return prev;
+            }
+
+            return [...prev, newMessage];
+        });
+    };
+
+    useEffect(() => {
+        if (!authUser) {
+            setMessages([]);
+            setUsers([]);
+            setSelectedUser(null);
+            setUnseenMessages({});
+            setMessagesLoading(false);
+        }
+    }, [authUser]);
+
     useEffect(() => {
         if (!socket) return;
 
@@ -90,10 +143,12 @@ export const ChatProvider = ({ children }) => {
                     seen: true
                 };
 
-                setMessages(prev => [
+                appendMessageIfNew(seenMessage);
+
+                setUnseenMessages(prev => ({
                     ...prev,
-                    seenMessage
-                ]);
+                    [newMessage.senderId]: 0
+                }));
 
                 try {
                     await axios.put(
@@ -118,12 +173,33 @@ export const ChatProvider = ({ children }) => {
             }
         };
 
+
+        const handleMessageSeen = (messageId) => {
+            setMessages(prev =>
+                prev.map(msg =>
+                    msg._id === messageId
+                        ? { ...msg, seen: true }
+                        : msg
+                )
+            );
+        };
+
         socket.on("newMessage", handleNewMessage);
+
+        socket.on(
+            "messageSeen",
+            handleMessageSeen
+        );
 
         return () => {
             socket.off(
                 "newMessage",
                 handleNewMessage
+            );
+
+            socket.off(
+                "messageSeen",
+                handleMessageSeen
             );
         };
 
@@ -131,6 +207,8 @@ export const ChatProvider = ({ children }) => {
 
     const value = {
         messages,
+        setMessages,
+        messagesLoading,
         users,
         selectedUser,
         getUsers,

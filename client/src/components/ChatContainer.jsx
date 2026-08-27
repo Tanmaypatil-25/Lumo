@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 
 const ChatContainer = () => {
 
-  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages } = useContext(ChatContext)
+  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages, setMessages, messagesLoading } = useContext(ChatContext)
   const { authUser, onlineUsers } = useContext(AuthContext)
 
 
@@ -15,57 +15,120 @@ const ChatContainer = () => {
   const scrollEnd = useRef();
 
   const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
 
   // Handle sending a message
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    const trimmedMessage = input.trim();
-    if(!trimmedMessage) return;
 
-    const success = await sendMessage({text: trimmedMessage});
-    if(success){
+    const trimmedMessage = input.trim();
+
+    if (!trimmedMessage || sending) return;
+
+    setSending(true);
+
+    const success = await sendMessage({
+      text: trimmedMessage
+    });
+
+    if (success) {
       setInput("");
     }
-  }
+
+    setSending(false);
+  };
+
+  const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2 MB
 
   // Handle sending an image
   const handleSendImage = async (e) => {
     const file = e.target.files[0];
-    if(!file || !file.type.startsWith("image/")){
-      toast.error("select an image file");
+
+    if (!file) return;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp"
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Only JPG, PNG, and WebP images are allowed");
+      e.target.value = "";
       return;
     }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error("Image must be smaller than 2 MB");
+      e.target.value = "";
+      return;
+    }
+
+    if (sending) return;
+
+    setSending(true);
+
     const reader = new FileReader();
+
     reader.onloadend = async () => {
-      await sendMessage({image: reader.result});
-      e.target.value = ""
-    }
+      const success = await sendMessage({
+        image: reader.result
+      });
+
+      if (success) {
+        e.target.value = "";
+      }
+
+      setSending(false);
+    };
+
+    reader.onerror = () => {
+      toast.error("Could not read the image");
+      setSending(false);
+      e.target.value = "";
+    };
+
     reader.readAsDataURL(file);
-  }
+  };
 
   useEffect(() => {
-    if(selectedUser){
-      getMessages(selectedUser._id)
+    if (!selectedUser) {
+      setMessages([]);
+      return;
     }
-  }, [selectedUser])
+
+    setMessages([]);
+
+    const controller = new AbortController();
+
+    getMessages(
+      selectedUser._id,
+      controller.signal
+    );
+
+    return () => {
+      controller.abort();
+    };
+
+  }, [selectedUser]);
 
   useEffect(() => {
-    if(scrollEnd.current && messages){
-      scrollEnd.current.scrollIntoView({ behavior: "smooth"})
+    if (scrollEnd.current && messages) {
+      scrollEnd.current.scrollIntoView({ behavior: "smooth" })
     }
-  }, [messages])
+  }, [messages]);
 
   return selectedUser ? (
     <div className='h-full overflow-scroll relative backdrop-blur-lg'>
       {/* ------- header -------- */}
       <div className='flex items-center gap-3 py-3 mx-4 border-b border-stone-500'>
-        <img src={selectedUser.profilePic || assets.avatar_icon} alt="" className='w-8 rounded-full'/>
+        <img src={selectedUser.profilePic || assets.avatar_icon} alt="" className='w-8 rounded-full' />
         <p className='flex-1 text-lg text-white flex items-center gap-2'>
           {selectedUser.fullName}
           {onlineUsers.includes(selectedUser._id) && <span className='w-2 h-2 rounded-full bg-green-500'></span>}
         </p>
-        <img onClick={() => setSelectedUser(null)} src={assets.arrow_icon} alt="" className='md:hidden max-w-7'/>
-        <img src={assets.help_icon} alt="" className='max-md:hidden max-w-5'/>
+        <img onClick={() => setSelectedUser(null)} src={assets.arrow_icon} alt="" className='md:hidden max-w-7' />
+        <img src={assets.help_icon} alt="" className='max-md:hidden max-w-5' />
       </div>
 
       {/* ------ chat_area ------ */}
@@ -76,10 +139,10 @@ const ChatContainer = () => {
               <img src={msg.image} className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8' alt="" />
             ) : (
               <p className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? 'rounded-br-none' : 'rounded-bl-none'}`}>{msg.text}</p>
-            ) }
+            )}
 
             <div className='text-center text-xs'>
-              <img src={msg.senderId === authUser._id ? authUser?.profilePic || assets.avatar_icon : selectedUser?.profilePic ||  assets.avatar_icon} className='w-7 rounded-full' alt="" />
+              <img src={msg.senderId === authUser._id ? authUser?.profilePic || assets.avatar_icon : selectedUser?.profilePic || assets.avatar_icon} className='w-7 rounded-full' alt="" />
 
               <p className='text-gray-500'>{formatMessageTime(msg.createdAt)}</p>
             </div>
@@ -94,13 +157,21 @@ const ChatContainer = () => {
       {/* ------- bottom search area ------- */}
       <div className='absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3'>
         <div className='flex-1 flex items-center bg-gray-100/12 px-3 rounded-full'>
-          <input onChange={(e) => setInput(e.target.value)} value={input} onKeyDown={(e) => e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a message' className='flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400' />
-          <input onChange={handleSendImage} type="file" id='image' accept='image/png, image/jpeg' hidden />
+          <input onChange={(e) => setInput(e.target.value)} value={input} disabled={sending} onKeyDown={(e) => e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a message' className='flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400' />
+          <input onChange={handleSendImage} type="file" id='image' accept='image/png, image/jpeg' disabled={sending} hidden />
           <label htmlFor="image">
-            <img src={assets.gallery_icon} alt="" className='w-5 mr-2 cursor-pointer'/>
+            <img src={assets.gallery_icon} alt="" className='w-5 mr-2 cursor-pointer' />
           </label>
         </div>
-        <img onClick={handleSendMessage} src={assets.send_button} alt="" className='w-7 cursor-pointer'/>
+        <img
+          onClick={sending ? undefined : handleSendMessage}
+          src={assets.send_button}
+          alt="Send"
+          className={`w-7 ${sending
+            ? "opacity-50 cursor-not-allowed"
+            : "cursor-pointer"
+            }`}
+        />
       </div>
 
     </div>

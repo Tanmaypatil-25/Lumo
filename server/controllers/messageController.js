@@ -2,6 +2,7 @@ import cloudinary from "../lib/cloudinary.js";
 import Message from "../models/Message.js";
 import User from "../models/User.js";
 import { io, userSocketMap } from "../server.js"
+import mongoose from "mongoose";
 
 // Get all users except the logged in user
 export const getUsersForSidebar = async (req, res) => {
@@ -65,12 +66,42 @@ export const getMessages = async (req, res) => {
 export const markMessagesAsSeen = async (req, res) => {
     try {
         const { id } = req.params;
-        await Message.findByIdAndUpdate(id, { seen: true });
+
+        const updatedMessage =
+            await Message.findByIdAndUpdate(
+                id,
+                { seen: true },
+                { new: true }
+            );
+
+        if (!updatedMessage) {
+            return res.status(404).json({
+                success: false,
+                message: "Message not found"
+            });
+        }
+
+        const userId = req.user._id.toString();
+
+        const userSockets =
+            userSocketMap[userId];
+
+        if (userSockets) {
+            userSockets.forEach((socketId) => {
+                io.to(socketId).emit(
+                    "messageSeen",
+                    updatedMessage._id.toString()
+                );
+            });
+        }
+
         return res.status(200).json({
             success: true
         });
+
     } catch (error) {
-        console.log(error.message)
+        console.log(error.message);
+
         return res.status(500).json({
             success: false,
             message: "Internal server error"
@@ -82,36 +113,99 @@ export const markMessagesAsSeen = async (req, res) => {
 export const sendMessage = async (req, res) => {
     try {
         const { text, image } = req.body;
+
         const recieverId = req.params.id;
         const senderId = req.user._id;
 
+        // Validate receiver ID
+        if (!mongoose.Types.ObjectId.isValid(recieverId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid receiver ID"
+            });
+        }
+
+        // Prevent messaging yourself
+        if (senderId.toString() === recieverId) {
+            return res.status(400).json({
+                success: false,
+                message: "You cannot send a message to yourself"
+            });
+        }
+
+        // Remove unnecessary whitespace
+        const cleanText =
+            typeof text === "string"
+                ? text.trim()
+                : "";
+
+        // Message must contain text or image
+        if (!cleanText && !image) {
+            return res.status(400).json({
+                success: false,
+                message: "Message cannot be empty"
+            });
+        }
+
+        if (cleanText.length > 5000) {
+            return res.status(400).json({
+                success: false,
+                message: "Message is too long"
+            });
+        }
+
+        // Make sure receiver exists
+        const receiverExists = await User.exists({
+            _id: recieverId
+        });
+
+        if (!receiverExists) {
+            return res.status(404).json({
+                success: false,
+                message: "Receiver not found"
+            });
+        }
+
         let imageUrl;
+
         if (image) {
-            const uploadResponse = await cloudinary.uploader.upload(image);
+            const uploadResponse =
+                await cloudinary.uploader.upload(image);
+
             imageUrl = uploadResponse.secure_url;
         }
+
         const newMessage = await Message.create({
             senderId,
             recieverId,
-            text,
+            text: cleanText || undefined,
             image: imageUrl
-        })
+        });
 
-        // Emit the new message to the recievers socket
-        const recieverSocketId = userSocketMap[recieverId];
-        if (recieverSocketId) {
-            io.to(recieverSocketId).emit("newMessage", newMessage);
+        // Send message to all active receiver sockets
+        const receiverSockets =
+            userSocketMap[recieverId];
+
+        if (receiverSockets) {
+            receiverSockets.forEach((socketId) => {
+                io.to(socketId).emit(
+                    "newMessage",
+                    newMessage
+                );
+            });
         }
 
         return res.status(201).json({
             success: true,
             newMessage
         });
+
     } catch (error) {
-        console.log(error.message)
+        console.log(error.message);
+
         return res.status(500).json({
             success: false,
             message: "Internal server error"
         });
     }
-}
+};

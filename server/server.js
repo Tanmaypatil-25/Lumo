@@ -50,20 +50,35 @@ io.on("connection", (socket) => {
 
     console.log("User Connected", userId);
 
-    userSocketMap[userId] = socket.id;
+    if (!userSocketMap[userId]) {
+        userSocketMap[userId] = new Set();
+    }
 
-    // Emit online users to all connected clients
+    userSocketMap[userId].add(socket.id);
+
     io.emit(
-        "getOnlineUsers", 
+        "getOnlineUsers",
         Object.keys(userSocketMap)
     );
 
     socket.on("disconnect", () => {
         console.log("User Disconnected", userId);
-        delete userSocketMap[userId];
-        io.emit("getOnlineUsers", Object.keys(userSocketMap));
-    })
-})
+
+        userSocketMap[userId]?.delete(socket.id);
+
+        if (
+            userSocketMap[userId] &&
+            userSocketMap[userId].size === 0
+        ) {
+            delete userSocketMap[userId];
+        }
+
+        io.emit(
+            "getOnlineUsers",
+            Object.keys(userSocketMap)
+        );
+    });
+});
 
 // Middleware setup
 app.use(express.json({ limit: "4mb" }));

@@ -12,13 +12,16 @@ export const AuthProvider = ({ children }) => {
 
     const [token, setToken] = useState(localStorage.getItem("token"));
     const [authUser, setAuthUser] = useState(null);
+    const [authLoading, setAuthLoading] = useState(true);
     const [onlineUsers, setOnlineUsers] = useState([]);
     const [socket, setSocket] = useState(null);
+    const [socketConnected, setSocketConnected] = useState(false);
 
     // Check if user is authenticated and if so, set the user data and connect the socket
     const checkAuth = async () => {
         try {
             const { data } = await axios.get("/api/auth/check");
+
             if (data.success) {
                 setAuthUser(data.user);
                 connectSocket(data.user, token);
@@ -28,6 +31,8 @@ export const AuthProvider = ({ children }) => {
             setToken(null);
             setAuthUser(null);
             delete axios.defaults.headers.common["Authorization"];
+        } finally {
+            setAuthLoading(false);
         }
     }
 
@@ -60,6 +65,7 @@ export const AuthProvider = ({ children }) => {
         delete axios.defaults.headers.common["Authorization"];
         socket?.disconnect();
         setSocket(null);
+        setSocketConnected(false);
         toast.success("Logged out successfully");
     }
 
@@ -90,31 +96,55 @@ export const AuthProvider = ({ children }) => {
             auth: {
                 token: authToken
             },
-            transports: ["websocket"]
+            transports: ["websocket"],
+            reconnection: true
         });
 
-        setSocket(newSocket);
+        newSocket.on("connect", () => {
+            setSocketConnected(true);
+            console.log("Socket connected:", newSocket.id);
+        });
+
+        newSocket.on("disconnect", (reason) => {
+            setSocketConnected(false);
+            setOnlineUsers([]);
+            console.log("Socket disconnected:", reason);
+        });
+
+        newSocket.on("connect_error", (error) => {
+            console.error(
+                "Socket connection error:",
+                error.message
+            );
+        });
 
         newSocket.on("getOnlineUsers", (userIds) => {
             setOnlineUsers(userIds);
         });
+
+        setSocket(newSocket);
+
     }
 
     useEffect(() => {
         if (token) {
             axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
             checkAuth();
+        } else {
+            setAuthLoading(false);
         }
     }, []);
 
     const value = {
         axios,
         authUser,
+        authLoading,
         onlineUsers,
         socket,
         login,
         logout,
-        updateProfile
+        updateProfile,
+        socketConnected
     }
 
     return (
