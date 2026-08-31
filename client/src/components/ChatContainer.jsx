@@ -34,21 +34,24 @@ const ChatContainer = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
-    const trimmedMessage = input.trim();
+    const cleanText = input.trim();
 
-    if (!trimmedMessage || sending) return;
+    if (!cleanText || sending) return;
 
-    setSending(true);
+    try {
+      setSending(true);
 
-    const success = await sendMessage({
-      text: trimmedMessage
-    });
+      const formData = new FormData();
+      formData.append("text", cleanText);
 
-    if (success) {
-      setInput("");
+      const success = await sendMessage(formData);
+
+      if (success) {
+        setInput("");
+      }
+    } finally {
+      setSending(false);
     }
-
-    setSending(false);
   };
 
   // Handle scrolling
@@ -75,13 +78,11 @@ const ChatContainer = () => {
     }
   };
 
-  const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2 MB
-
   // Handle sending an image
   const handleSendImage = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
 
-    if (!file) return;
+    if (!file || sending) return;
 
     const allowedTypes = [
       "image/jpeg",
@@ -90,42 +91,37 @@ const ChatContainer = () => {
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Only JPG, PNG, and WebP images are allowed");
+      toast.error("Only JPEG, PNG and WebP images are allowed");
       e.target.value = "";
       return;
     }
 
-    if (file.size > MAX_IMAGE_SIZE) {
+    if (file.size > 2 * 1024 * 1024) {
       toast.error("Image must be smaller than 2 MB");
       e.target.value = "";
       return;
     }
 
-    if (sending) return;
+    try {
+      setSending(true);
 
-    setSending(true);
+      const formData = new FormData();
 
-    const reader = new FileReader();
-
-    reader.onloadend = async () => {
-      const success = await sendMessage({
-        image: reader.result
-      });
-
-      if (success) {
-        e.target.value = "";
+      if (input.trim()) {
+        formData.append("text", input.trim());
       }
 
-      setSending(false);
-    };
+      formData.append("image", file);
 
-    reader.onerror = () => {
-      toast.error("Could not read the image");
-      setSending(false);
-      e.target.value = "";
-    };
+      const success = await sendMessage(formData);
 
-    reader.readAsDataURL(file);
+      if (success) {
+        setInput("");
+        e.target.value = "";
+      }
+    } finally {
+      setSending(false);
+    }
   };
 
   useEffect(() => {

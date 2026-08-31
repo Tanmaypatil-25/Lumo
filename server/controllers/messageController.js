@@ -172,10 +172,31 @@ export const markMessagesAsSeen = async (req, res) => {
     }
 }
 
+const uploadBufferToCloudinary = (buffer) => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            {
+                resource_type: "image",
+                folder: "lumo"
+            },
+            (error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            }
+        );
+
+        uploadStream.end(buffer);
+    });
+};
+
 // Send message to selected user
 export const sendMessage = async (req, res) => {
     try {
-        const { text, image } = req.body;
+        const { text } = req.body;
+        const imageFile = req.file;
 
         const recieverId = req.params.id;
         const senderId = req.user._id;
@@ -203,7 +224,7 @@ export const sendMessage = async (req, res) => {
                 : "";
 
         // Message must contain text or image
-        if (!cleanText && !image) {
+        if (!cleanText && !imageFile) {
             return res.status(400).json({
                 success: false,
                 message: "Message cannot be empty"
@@ -231,9 +252,10 @@ export const sendMessage = async (req, res) => {
 
         let imageUrl;
 
-        if (image) {
-            const uploadResponse =
-                await cloudinary.uploader.upload(image);
+        if (imageFile) {
+            const uploadResponse = await uploadBufferToCloudinary(
+                imageFile.buffer
+            );
 
             imageUrl = uploadResponse.secure_url;
         }

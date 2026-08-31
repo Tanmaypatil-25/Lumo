@@ -134,23 +134,21 @@ export const ChatProvider = ({ children }) => {
         }
     };
 
-    const sendMessage = async (messageData) => {
-        try {
-            if (!selectedUser) return false;
+    const sendMessage = async (formData) => {
+        if (!selectedUser) return false;
 
+        try {
             const { data } = await axios.post(
                 `/api/messages/send/${selectedUser._id}`,
-                messageData
+                formData
             );
 
             if (data.success) {
                 appendMessageIfNew(data.newMessage);
-
                 return true;
             }
 
             return false;
-
         } catch (error) {
             toast.error(
                 error.response?.data?.message ||
