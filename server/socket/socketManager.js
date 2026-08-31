@@ -3,11 +3,15 @@ const userSocketMap = new Map();
 export const addUserSocket = (userId, socketId) => {
     const id = userId.toString();
 
-    if (!userSocketMap.has(id)) {
+    const wasOnline = userSocketMap.has(id);
+
+    if (!wasOnline) {
         userSocketMap.set(id, new Set());
     }
 
     userSocketMap.get(id).add(socketId);
+
+    return !wasOnline;
 };
 
 export const removeUserSocket = (userId, socketId) => {
@@ -15,13 +19,16 @@ export const removeUserSocket = (userId, socketId) => {
 
     const sockets = userSocketMap.get(id);
 
-    if (!sockets) return;
+    if (!sockets) return false;
 
     sockets.delete(socketId);
 
     if (sockets.size === 0) {
         userSocketMap.delete(id);
+        return true;
     }
+
+    return false;
 };
 
 export const getUserSockets = (userId) => {

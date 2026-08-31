@@ -49,20 +49,30 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
     const userId = socket.userId;
 
-    addUserSocket(userId, socket.id);
-
-    io.emit(
-        "getOnlineUsers",
-        getOnlineUsers()
+    const becameOnline = addUserSocket(
+        userId,
+        socket.id
     );
 
-    socket.on("disconnect", () => {
-        removeUserSocket(userId, socket.id);
-
+    if (becameOnline) {
         io.emit(
             "getOnlineUsers",
             getOnlineUsers()
         );
+    }
+
+    socket.on("disconnect", () => {
+        const becameOffline = removeUserSocket(
+            userId,
+            socket.id
+        );
+
+        if (becameOffline) {
+            io.emit(
+                "getOnlineUsers",
+                getOnlineUsers()
+            );
+        }
     });
 });
 
