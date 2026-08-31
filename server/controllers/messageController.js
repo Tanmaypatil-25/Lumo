@@ -12,7 +12,9 @@ export const getUsersForSidebar = async (req, res) => {
 
         const filteredUsers = await User.find({
             _id: { $ne: userId }
-        }).select("-password");
+        })
+            .select("_id fullName profilePic bio")
+            .lean();
 
         const unreadCounts = await Message.aggregate([
             {
@@ -85,7 +87,8 @@ export const getMessages = async (req, res) => {
 
         const messages = await Message.find(conversationQuery)
             .sort({ createdAt: -1 })
-            .limit(limit + 1);
+            .limit(limit + 1)
+            .lean();
 
         const hasMore = messages.length > limit;
 
