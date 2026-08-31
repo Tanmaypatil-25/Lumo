@@ -1,8 +1,9 @@
 import cloudinary from "../lib/cloudinary.js";
 import Message from "../models/Message.js";
 import User from "../models/User.js";
-import { io, userSocketMap } from "../server.js"
+import { io } from "../server.js"
 import mongoose from "mongoose";
+import { getUserSockets } from "../socket/socketManager.js";
 
 // Get all users except the logged in user
 export const getUsersForSidebar = async (req, res) => {
@@ -147,7 +148,7 @@ export const markMessagesAsSeen = async (req, res) => {
         const userId = req.user._id.toString();
 
         const userSockets =
-            userSocketMap[userId];
+            getUserSockets[userId];
 
         if (userSockets) {
             userSockets.forEach((socketId) => {
@@ -268,17 +269,14 @@ export const sendMessage = async (req, res) => {
         });
 
         // Send message to all active receiver sockets
-        const receiverSockets =
-            userSocketMap[recieverId];
+        const receiverSockets = getUserSockets(recieverId);
 
-        if (receiverSockets) {
-            receiverSockets.forEach((socketId) => {
-                io.to(socketId).emit(
-                    "newMessage",
-                    newMessage
-                );
-            });
-        }
+        receiverSockets.forEach((socketId) => {
+            io.to(socketId).emit(
+                "newMessage",
+                newMessage
+            );
+        });
 
         return res.status(201).json({
             success: true,

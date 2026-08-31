@@ -7,6 +7,7 @@ import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
+import { addUserSocket, removeUserSocket, getOnlineUsers } from "./socket/socketManager.js";
 
 // Creating express app
 const app = express();
@@ -48,34 +49,19 @@ io.use((socket, next) => {
 io.on("connection", (socket) => {
     const userId = socket.userId;
 
-    console.log("User Connected", userId);
-
-    if (!userSocketMap[userId]) {
-        userSocketMap[userId] = new Set();
-    }
-
-    userSocketMap[userId].add(socket.id);
+    addUserSocket(userId, socket.id);
 
     io.emit(
         "getOnlineUsers",
-        Object.keys(userSocketMap)
+        getOnlineUsers()
     );
 
     socket.on("disconnect", () => {
-        console.log("User Disconnected", userId);
-
-        userSocketMap[userId]?.delete(socket.id);
-
-        if (
-            userSocketMap[userId] &&
-            userSocketMap[userId].size === 0
-        ) {
-            delete userSocketMap[userId];
-        }
+        removeUserSocket(userId, socket.id);
 
         io.emit(
             "getOnlineUsers",
-            Object.keys(userSocketMap)
+            getOnlineUsers()
         );
     });
 });
