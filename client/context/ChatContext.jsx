@@ -11,7 +11,7 @@ export const ChatProvider = ({ children }) => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [unseenMessages, setUnseenMessages] = useState({});
     const [messagesLoading, setMessagesLoading] = useState(false);
-    const [messagePage, setMessagePage] = useState(1);
+    const [messageCursor, setMessageCursor] = useState(null);
     const [hasMoreMessages, setHasMoreMessages] = useState(true);
     const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
 
@@ -46,7 +46,6 @@ export const ChatProvider = ({ children }) => {
                 `/api/messages/${userId}`,
                 {
                     params: {
-                        page: 1,
                         limit: 20
                     },
                     signal
@@ -59,7 +58,7 @@ export const ChatProvider = ({ children }) => {
             ) {
                 setMessages(data.messages);
 
-                setMessagePage(1);
+                setMessageCursor(data.nextCursor);
                 setHasMoreMessages(data.hasMore);
 
                 setUnseenMessages(prev => ({
@@ -99,7 +98,6 @@ export const ChatProvider = ({ children }) => {
             return;
         }
 
-        const nextPage = messagePage + 1;
 
         try {
             setMessagesLoading(true);
@@ -109,8 +107,8 @@ export const ChatProvider = ({ children }) => {
                 `/api/messages/${selectedUser._id}`,
                 {
                     params: {
-                        page: nextPage,
-                        limit: 20
+                        limit: 20,
+                        before: messageCursor
                     }
                 }
             );
@@ -121,7 +119,7 @@ export const ChatProvider = ({ children }) => {
                     ...prev
                 ]);
 
-                setMessagePage(nextPage);
+                setMessageCursor(data.nextCursor);
                 setHasMoreMessages(data.hasMore);
             }
 
@@ -268,7 +266,7 @@ export const ChatProvider = ({ children }) => {
         setMessages,
         messagesLoading,
 
-        messagePage,
+        messageCursor,
         hasMoreMessages,
         loadOlderMessages,
         loadingOlderMessages,

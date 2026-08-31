@@ -12,6 +12,21 @@ const messageSchema = new mongoose.Schema({
     timestamps: true
 });
 
+// Conversation queries + pagination
+messageSchema.index({
+  senderId: 1,
+  recieverId: 1,
+  createdAt: -1
+});
+
+
+// Unread-message queries
+messageSchema.index({
+  recieverId: 1,
+  seen: 1,
+  senderId: 1
+});
+
 const Message = mongoose.model("Message", messageSchema);
 
 export default Message;

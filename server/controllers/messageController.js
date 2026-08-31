@@ -56,19 +56,14 @@ export const getMessages = async (req, res) => {
         const { id: selectedUserId } = req.params;
         const myId = req.user._id;
 
-        const page = Math.max(
-            parseInt(req.query.page) || 1,
-            1
-        );
+        const { before } = req.query;
 
         const limit = Math.min(
             parseInt(req.query.limit) || 20,
             50
         );
 
-        const skip = (page - 1) * limit;
-
-        const query = {
+        const conversationQuery = {
             $or: [
                 {
                     senderId: myId,
@@ -81,10 +76,26 @@ export const getMessages = async (req, res) => {
             ]
         };
 
-        const messages = await Message.find(query)
+        if (before) {
+            conversationQuery.createdAt = {
+                $lt: new Date(before)
+            };
+        }
+
+        const messages = await Message.find(conversationQuery)
             .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
+            .limit(limit + 1);
+
+        const hasMore = messages.length > limit;
+
+        if (hasMore) {
+            messages.pop();
+        }
+
+        const nextCursor =
+            messages.length > 0
+                ? messages[messages.length - 1].createdAt
+                : null;
 
         await Message.updateMany(
             {
@@ -99,12 +110,9 @@ export const getMessages = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-
-            // reverse because DB query fetched newest first
             messages: messages.reverse(),
-
-            page,
-            hasMore: messages.length === limit
+            hasMore,
+            nextCursor
         });
 
     } catch (error) {
