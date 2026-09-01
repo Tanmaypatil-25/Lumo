@@ -515,7 +515,6 @@ export const ChatProvider = ({ children }) => {
                 setSelectedUser,
 
                 unseenMessages,
-                setUnseenMessages,
 
                 getUsers,
                 getMessages,

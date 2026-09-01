@@ -396,7 +396,6 @@ export const AuthProvider = ({ children }) => {
                 axios,
 
                 authUser,
-                setAuthUser,
 
                 token,
 

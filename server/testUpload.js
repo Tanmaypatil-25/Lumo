@@ -6,7 +6,6 @@ try {
         "https://res.cloudinary.com/demo/image/upload/sample.jpg"
     );
 
-    console.log(result);
 } catch (err) {
     console.error(err);
 }

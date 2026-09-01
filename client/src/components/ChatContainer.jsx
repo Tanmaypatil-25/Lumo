@@ -5,8 +5,8 @@ import { ChatContext } from '../../context/ChatContext'
 import { AuthContext } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 import {
-    MAX_IMAGE_SIZE,
-    ALLOWED_IMAGE_TYPES
+  MAX_IMAGE_SIZE,
+  ALLOWED_IMAGE_TYPES
 } from "../constants/chat";
 
 const ChatContainer = () => {
@@ -174,8 +174,8 @@ const ChatContainer = () => {
         onScroll={handleScroll}
         className='flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6'
       >
-        {messages.map((msg, index) => (
-          <div key={index} className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && 'flex-row-reverse'}`}>
+        {messages.map((msg) => (
+          <div key={msg._id} className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && 'flex-row-reverse'}`}>
             {msg.image ? (
               <img src={msg.image} className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8' alt="" />
             ) : (
@@ -199,7 +199,14 @@ const ChatContainer = () => {
       <div className='absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3'>
         <div className='flex-1 flex items-center bg-gray-100/12 px-3 rounded-full'>
           <input onChange={(e) => setInput(e.target.value)} value={input} disabled={sending} onKeyDown={(e) => e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a message' className='flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400' />
-          <input onChange={handleSendImage} type="file" id='image' accept='image/png, image/jpeg' disabled={sending} hidden />
+          <input
+            onChange={handleSendImage}
+            type="file"
+            id="image"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={sending}
+            hidden
+          />
           <label htmlFor="image">
             <img src={assets.gallery_icon} alt="" className='w-5 mr-2 cursor-pointer' />
           </label>

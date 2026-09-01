@@ -5,14 +5,12 @@ import mongoose from "mongoose";
 import {
     uploadImageBuffer
 } from "../services/cloudinaryService.js";
-
 import { getUserSockets } from "../socket/socketManager.js";
-
 import {
     MESSAGE_PAGE_LIMIT,
+    MAX_MESSAGE_PAGE_LIMIT,
     MAX_MESSAGE_LENGTH
 } from "../config/constants.js";
-
 import {
     successResponse,
     errorResponse
@@ -74,7 +72,7 @@ export const getMessages = async (req, res) => {
 
         const limit = Math.min(
             parseInt(req.query.limit) || MESSAGE_PAGE_LIMIT,
-            50
+            MAX_MESSAGE_PAGE_LIMIT
         );
 
         const conversationQuery = {
