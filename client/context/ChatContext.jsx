@@ -346,6 +346,32 @@ export const ChatProvider = ({ children }) => {
         ]
     );
 
+    // Delete message func
+    const deleteMessage = useCallback(
+        async (messageId) => {
+            try {
+                const { data } =
+                    await axios.delete(
+                        `/api/messages/${messageId}`
+                    );
+
+                return data.success;
+
+            } catch (error) {
+
+                toast.error(
+                    error.response
+                        ?.data
+                        ?.message ||
+                    error.message
+                );
+
+                return false;
+            }
+        },
+        [axios]
+    );
+
 
     // Reset chat state after logout
     useEffect(() => {
@@ -462,6 +488,18 @@ export const ChatProvider = ({ children }) => {
             );
         };
 
+        const handleMessageDeleted = ({
+            messageId
+        }) => {
+
+            setMessages((prevMessages) =>
+                prevMessages.filter(
+                    (message) =>
+                        message._id !== messageId
+                )
+            );
+        };
+
         const handleTyping = ({ senderId }) => {
             setTypingUserId(senderId);
         };
@@ -482,6 +520,11 @@ export const ChatProvider = ({ children }) => {
         socket.on(
             "stopTyping",
             handleStopTyping
+        );
+
+        socket.on(
+            "messageDeleted",
+            handleMessageDeleted
         );
 
 
@@ -508,6 +551,11 @@ export const ChatProvider = ({ children }) => {
             socket.off(
                 "messageSeen",
                 handleMessageSeen
+            );
+
+            socket.off(
+                "messageDeleted",
+                handleMessageDeleted
             );
 
             socket.off(
@@ -548,6 +596,7 @@ export const ChatProvider = ({ children }) => {
 
                 unseenMessages,
                 typingUserId,
+                deleteMessage,
 
                 getUsers,
                 getMessages,
@@ -566,7 +615,8 @@ export const ChatProvider = ({ children }) => {
                 getUsers,
                 getMessages,
                 loadOlderMessages,
-                sendMessage
+                sendMessage,
+                deleteMessage
             ]
         );
 

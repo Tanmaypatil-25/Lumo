@@ -22,7 +22,8 @@ const ChatContainer = () => {
     hasMoreMessages,
     messagesLoading,
     loadingOlderMessages,
-    typingUserId
+    typingUserId,
+    deleteMessage
   } = useContext(ChatContext);
 
   const { authUser, onlineUsers, socket } = useContext(AuthContext)
@@ -35,6 +36,20 @@ const ChatContainer = () => {
 
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+
+  const handleDeleteMessage = async (
+    messageId
+  ) => {
+
+    const success =
+      await deleteMessage(messageId);
+
+    if (success) {
+      toast.success(
+        "Message deleted"
+      );
+    }
+  };
 
   const handleInputChange = (e) => {
     const value = e.target.value;
@@ -267,6 +282,20 @@ const ChatContainer = () => {
                     msg.createdAt
                   )}
                 </p>
+
+                {msg.senderId === authUser._id && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDeleteMessage(
+                        msg._id
+                      )
+                    }
+                    className="text-xs text-red-400 hover:text-red-300 mb-8"
+                  >
+                    Delete
+                  </button>
+                )}
 
                 {msg.senderId === authUser._id && (
                   <p className="text-[10px]">

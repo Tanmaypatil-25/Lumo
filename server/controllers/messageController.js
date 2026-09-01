@@ -3,7 +3,8 @@ import User from "../models/User.js";
 import { io } from "../server.js";
 import mongoose from "mongoose";
 import {
-    uploadImageBuffer
+    uploadImageBuffer,
+    deleteImage
 } from "../services/cloudinaryService.js";
 import { getUserSockets } from "../socket/socketManager.js";
 import {
@@ -16,6 +17,101 @@ import {
     errorResponse
 } from "../utils/response.js";
 
+
+
+// Delete a message
+export const deleteMessage = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user._id;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return errorResponse(
+                res,
+                400,
+                "Invalid message ID"
+            );
+        }
+
+        const message = await Message.findById(id);
+
+        if (!message) {
+            return errorResponse(
+                res,
+                404,
+                "Message not found"
+            );
+        }
+
+        if (
+            message.senderId.toString() !==
+            userId.toString()
+        ) {
+            return errorResponse(
+                res,
+                403,
+                "You can only delete your own messages"
+            );
+        }
+
+        // Delete associated Cloudinary image
+        if (message.imagePublicId) {
+            await deleteImage(
+                message.imagePublicId
+            );
+        }
+
+        // Delete message from MongoDB
+        await Message.findByIdAndDelete(id);
+
+        const receiverSockets =
+            getUserSockets(
+                message.receiverId.toString()
+            );
+
+        receiverSockets.forEach((socketId) => {
+            io.to(socketId).emit(
+                "messageDeleted",
+                {
+                    messageId:
+                        message._id.toString()
+                }
+            );
+        });
+
+        const senderSockets =
+            getUserSockets(
+                message.senderId.toString()
+            );
+
+        senderSockets.forEach((socketId) => {
+            io.to(socketId).emit(
+                "messageDeleted",
+                {
+                    messageId:
+                        message._id.toString()
+                }
+            );
+        });
+
+        return successResponse(
+            res,
+            200,
+            {
+                message:
+                    "Message deleted successfully"
+            }
+        );
+
+    } catch (error) {
+        console.error(
+            "Delete message error:",
+            error.message
+        );
+
+        return errorResponse(res);
+    }
+};
 
 // Get all users except the logged-in user
 export const getUsersForSidebar = async (req, res) => {
@@ -327,6 +423,8 @@ export const sendMessage = async (req, res) => {
 
 
         let imageUrl;
+        let imagePublicId;
+
 
         // Upload image if present
         if (imageFile) {
@@ -334,7 +432,12 @@ export const sendMessage = async (req, res) => {
                 await uploadImageBuffer(
                     imageFile.buffer
                 );
-            imageUrl = uploadResponse.secure_url;
+
+            imageUrl =
+                uploadResponse.secure_url;
+
+            imagePublicId =
+                uploadResponse.public_id;
         }
 
 
@@ -343,7 +446,9 @@ export const sendMessage = async (req, res) => {
             senderId,
             receiverId,
             text: cleanText || undefined,
-            image: imageUrl || undefined
+            image: imageUrl || undefined,
+            imagePublicId:
+                imagePublicId || undefined
         });
 
 

@@ -34,3 +34,17 @@ export const uploadBase64Image = async (image) => {
         }
     );
 };
+
+// Delete image from Cloudinary
+export const deleteImage = async (publicId) => {
+    if (!publicId) {
+        return;
+    }
+
+    return cloudinary.uploader.destroy(
+        publicId,
+        {
+            resource_type: "image"
+        }
+    );
+};
