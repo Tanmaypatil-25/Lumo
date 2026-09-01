@@ -4,6 +4,10 @@ import User from "../models/User.js";
 import { io } from "../server.js"
 import mongoose from "mongoose";
 import { getUserSockets } from "../socket/socketManager.js";
+import {
+    MESSAGE_PAGE_LIMIT,
+    MAX_MESSAGE_LENGTH
+} from "../config/constants.js";
 
 // Get all users except the logged in user
 export const getUsersForSidebar = async (req, res) => {
@@ -19,7 +23,7 @@ export const getUsersForSidebar = async (req, res) => {
         const unreadCounts = await Message.aggregate([
             {
                 $match: {
-                    recieverId: userId,
+                    receiverId: userId,
                     seen: false
                 }
             },
@@ -62,7 +66,7 @@ export const getMessages = async (req, res) => {
         const { before } = req.query;
 
         const limit = Math.min(
-            parseInt(req.query.limit) || 20,
+            parseInt(req.query.limit) || MESSAGE_PAGE_LIMIT,
             50
         );
 
@@ -70,11 +74,11 @@ export const getMessages = async (req, res) => {
             $or: [
                 {
                     senderId: myId,
-                    recieverId: selectedUserId
+                    receiverId: selectedUserId
                 },
                 {
                     senderId: selectedUserId,
-                    recieverId: myId
+                    receiverId: myId
                 }
             ]
         };
@@ -104,7 +108,7 @@ export const getMessages = async (req, res) => {
         await Message.updateMany(
             {
                 senderId: selectedUserId,
-                recieverId: myId,
+                receiverId: myId,
                 seen: false
             },
             {
@@ -202,11 +206,11 @@ export const sendMessage = async (req, res) => {
         const { text } = req.body;
         const imageFile = req.file;
 
-        const recieverId = req.params.id;
+        const receiverId = req.params.id;
         const senderId = req.user._id;
 
         // Validate receiver ID
-        if (!mongoose.Types.ObjectId.isValid(recieverId)) {
+        if (!mongoose.Types.ObjectId.isValid(receiverId)) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid receiver ID"
@@ -214,7 +218,7 @@ export const sendMessage = async (req, res) => {
         }
 
         // Prevent messaging yourself
-        if (senderId.toString() === recieverId) {
+        if (senderId.toString() === receiverId) {
             return res.status(400).json({
                 success: false,
                 message: "You cannot send a message to yourself"
@@ -235,7 +239,7 @@ export const sendMessage = async (req, res) => {
             });
         }
 
-        if (cleanText.length > 5000) {
+        if (cleanText.length > MAX_MESSAGE_LENGTH) {
             return res.status(400).json({
                 success: false,
                 message: "Message is too long"
@@ -244,7 +248,7 @@ export const sendMessage = async (req, res) => {
 
         // Make sure receiver exists
         const receiverExists = await User.exists({
-            _id: recieverId
+            _id: receiverId
         });
 
         if (!receiverExists) {
@@ -266,13 +270,13 @@ export const sendMessage = async (req, res) => {
 
         const newMessage = await Message.create({
             senderId,
-            recieverId,
+            receiverId,
             text: cleanText || undefined,
             image: imageUrl
         });
 
         // Send message to all active receiver sockets
-        const receiverSockets = getUserSockets(recieverId);
+        const receiverSockets = getUserSockets(receiverId);
 
         receiverSockets.forEach((socketId) => {
             io.to(socketId).emit(

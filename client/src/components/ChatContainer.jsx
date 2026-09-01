@@ -1,9 +1,13 @@
-import React, { useContext, useEffect, useRef, useState } from 'react'
-import assets, { messagesDummyData } from '../assets/assets'
+import { useContext, useEffect, useRef, useState } from 'react'
+import assets from '../assets/assets'
 import { formatMessageTime } from '../lib/utils'
 import { ChatContext } from '../../context/ChatContext'
 import { AuthContext } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
+import {
+    MAX_IMAGE_SIZE,
+    ALLOWED_IMAGE_TYPES
+} from "../constants/chat";
 
 const ChatContainer = () => {
 
@@ -84,19 +88,13 @@ const ChatContainer = () => {
 
     if (!file || sending) return;
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       toast.error("Only JPEG, PNG and WebP images are allowed");
       e.target.value = "";
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > MAX_IMAGE_SIZE) {
       toast.error("Image must be smaller than 2 MB");
       e.target.value = "";
       return;

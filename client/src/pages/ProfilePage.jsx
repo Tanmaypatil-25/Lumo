@@ -1,8 +1,12 @@
-import React, { useContext, useState, useEffect } from 'react'
+import { useContext, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import assets from '../assets/assets';
 import { AuthContext } from '../../context/AuthContext.jsx';
 import toast from "react-hot-toast";
+import {
+    MAX_IMAGE_SIZE,
+    ALLOWED_IMAGE_TYPES
+} from "../constants/chat";
 
 const ProfilePage = () => {
 
@@ -17,20 +21,12 @@ const ProfilePage = () => {
     authUser?.profilePic || null
   );
 
-  const MAX_IMAGE_SIZE = 2 * 1024 * 1024;
-
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
 
     if (!file) return;
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp"
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       toast.error("Only JPG, PNG, and WebP images are allowed");
       e.target.value = "";
       return;

@@ -1,6 +1,9 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import toast from "react-hot-toast";
+import {
+    MESSAGE_PAGE_LIMIT
+} from "../src/constants/chat";
 
 export const ChatContext = createContext();
 
@@ -46,7 +49,7 @@ export const ChatProvider = ({ children }) => {
                 `/api/messages/${userId}`,
                 {
                     params: {
-                        limit: 20
+                        limit: MESSAGE_PAGE_LIMIT
                     },
                     signal
                 }

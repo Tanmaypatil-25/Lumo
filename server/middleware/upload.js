@@ -1,4 +1,8 @@
 import multer from "multer";
+import {
+    MAX_IMAGE_SIZE,
+    ALLOWED_IMAGE_TYPES
+} from "../config/constants.js";
 
 const storage = multer.memoryStorage();
 
@@ -6,17 +10,12 @@ const upload = multer({
     storage,
 
     limits: {
-        fileSize: 2 * 1024 * 1024
+        fileSize: MAX_IMAGE_SIZE
     },
 
     fileFilter: (req, file, cb) => {
-        const allowedTypes = [
-            "image/jpeg",
-            "image/png",
-            "image/webp"
-        ];
 
-        if (!allowedTypes.includes(file.mimetype)) {
+        if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
             return cb(
                 new Error(
                     "Only JPEG, PNG and WebP images are allowed"
