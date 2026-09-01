@@ -8,6 +8,15 @@ import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
 import { addUserSocket, removeUserSocket, getOnlineUsers } from "./socket/socketManager.js";
+import { validateEnv } from "./config/env.js";
+
+
+try {
+    validateEnv();
+} catch (error) {
+    console.error(`❌ Server configuration error: ${error.message}`);
+    process.exit(1);
+}
 
 // Creating express app
 const app = express();
