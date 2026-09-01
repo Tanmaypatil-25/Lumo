@@ -21,18 +21,56 @@ const ChatContainer = () => {
     loadOlderMessages,
     hasMoreMessages,
     messagesLoading,
-    loadingOlderMessages
+    loadingOlderMessages,
+    typingUserId
   } = useContext(ChatContext);
 
-  const { authUser, onlineUsers } = useContext(AuthContext)
+  const { authUser, onlineUsers, socket } = useContext(AuthContext)
 
 
 
   const messagesContainerRef = useRef(null);
   const scrollEnd = useRef();
+  const typingTimeoutRef = useRef(null);
 
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+
+    setInput(value);
+
+    if (!socket || !selectedUser) {
+      return;
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    if (!value.trim()) {
+      socket.emit(
+        "stopTyping",
+        selectedUser._id
+      );
+
+      return;
+    }
+
+    socket.emit(
+      "typing",
+      selectedUser._id
+    );
+
+    typingTimeoutRef.current =
+      setTimeout(() => {
+        socket.emit(
+          "stopTyping",
+          selectedUser._id
+        );
+      }, 1500);
+  };
 
   // Handle sending a message
   const handleSendMessage = async (e) => {
@@ -52,6 +90,11 @@ const ChatContainer = () => {
 
       if (success) {
         setInput("");
+
+        socket?.emit(
+          "stopTyping",
+          selectedUser._id
+        );
       }
     } finally {
       setSending(false);
@@ -116,6 +159,11 @@ const ChatContainer = () => {
       if (success) {
         setInput("");
         e.target.value = "";
+
+        socket?.emit(
+          "stopTyping",
+          selectedUser._id
+        );
       }
     } finally {
       setSending(false);
@@ -138,6 +186,19 @@ const ChatContainer = () => {
     );
 
     return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(
+          typingTimeoutRef.current
+        );
+
+        typingTimeoutRef.current = null;
+      }
+
+      socket?.emit(
+        "stopTyping",
+        selectedUser._id
+      );
+
       controller.abort();
     };
 
@@ -160,10 +221,25 @@ const ChatContainer = () => {
       {/* ------- header -------- */}
       <div className='flex items-center gap-3 py-3 mx-4 border-b border-stone-500'>
         <img src={selectedUser.profilePic || assets.avatar_icon} alt="" className='w-8 rounded-full' />
-        <p className='flex-1 text-lg text-white flex items-center gap-2'>
-          {selectedUser.fullName}
-          {onlineUsers.includes(selectedUser._id) && <span className='w-2 h-2 rounded-full bg-green-500'></span>}
-        </p>
+        <div className="flex-1">
+
+          <p className="text-lg text-white flex items-center gap-2">
+            {selectedUser.fullName}
+
+            {onlineUsers.includes(
+              selectedUser._id
+            ) && (
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+              )}
+          </p>
+
+          {typingUserId === selectedUser._id && (
+            <p className="text-xs text-gray-400">
+              typing...
+            </p>
+          )}
+
+        </div>
         <img onClick={() => setSelectedUser(null)} src={assets.arrow_icon} alt="" className='md:hidden max-w-7' />
         <img src={assets.help_icon} alt="" className='max-md:hidden max-w-5' />
       </div>
@@ -185,7 +261,21 @@ const ChatContainer = () => {
             <div className='text-center text-xs'>
               <img src={msg.senderId === authUser._id ? authUser?.profilePic || assets.avatar_icon : selectedUser?.profilePic || assets.avatar_icon} className='w-7 rounded-full' alt="" />
 
-              <p className='text-gray-500'>{formatMessageTime(msg.createdAt)}</p>
+              <div className="text-gray-500">
+                <p>
+                  {formatMessageTime(
+                    msg.createdAt
+                  )}
+                </p>
+
+                {msg.senderId === authUser._id && (
+                  <p className="text-[10px]">
+                    {msg.seen
+                      ? "Seen"
+                      : "Sent"}
+                  </p>
+                )}
+              </div>
             </div>
 
           </div>
@@ -198,7 +288,7 @@ const ChatContainer = () => {
       {/* ------- bottom search area ------- */}
       <div className='absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3'>
         <div className='flex-1 flex items-center bg-gray-100/12 px-3 rounded-full'>
-          <input onChange={(e) => setInput(e.target.value)} value={input} disabled={sending} onKeyDown={(e) => e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a message' className='flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400' />
+          <input onChange={handleInputChange} value={input} disabled={sending} onKeyDown={(e) => e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a message' className='flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400' />
           <input
             onChange={handleSendImage}
             type="file"

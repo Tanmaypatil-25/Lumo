@@ -39,6 +39,9 @@ export const ChatProvider = ({ children }) => {
     const [loadingOlderMessages, setLoadingOlderMessages] =
         useState(false);
 
+    const [typingUserId, setTypingUserId] =
+        useState(null);
+
 
     const {
         socket,
@@ -365,6 +368,8 @@ export const ChatProvider = ({ children }) => {
 
             setLoadingOlderMessages(false);
 
+            setTypingUserId(null);
+
             latestMessagesRequest.current++;
         }
 
@@ -442,25 +447,42 @@ export const ChatProvider = ({ children }) => {
             };
 
 
-        const handleMessageSeen =
-            (messageId) => {
+        const handleMessageSeen = ({
+            messageId
+        }) => {
+            setMessages((prevMessages) =>
+                prevMessages.map((message) =>
+                    message._id === messageId
+                        ? {
+                            ...message,
+                            seen: true
+                        }
+                        : message
+                )
+            );
+        };
 
-                setMessages(
-                    (prev) =>
-                        prev.map(
-                            (msg) =>
-                                msg._id ===
-                                    messageId
+        const handleTyping = ({ senderId }) => {
+            setTypingUserId(senderId);
+        };
 
-                                    ? {
-                                        ...msg,
-                                        seen: true
-                                    }
+        const handleStopTyping = ({ senderId }) => {
+            setTypingUserId((currentUserId) =>
+                currentUserId === senderId
+                    ? null
+                    : currentUserId
+            );
+        };
 
-                                    : msg
-                        )
-                );
-            };
+        socket.on(
+            "typing",
+            handleTyping
+        );
+
+        socket.on(
+            "stopTyping",
+            handleStopTyping
+        );
 
 
         socket.on(
@@ -486,6 +508,16 @@ export const ChatProvider = ({ children }) => {
             socket.off(
                 "messageSeen",
                 handleMessageSeen
+            );
+
+            socket.off(
+                "typing",
+                handleTyping
+            );
+
+            socket.off(
+                "stopTyping",
+                handleStopTyping
             );
         };
 
@@ -515,6 +547,7 @@ export const ChatProvider = ({ children }) => {
                 setSelectedUser,
 
                 unseenMessages,
+                typingUserId,
 
                 getUsers,
                 getMessages,
@@ -529,6 +562,7 @@ export const ChatProvider = ({ children }) => {
                 users,
                 selectedUser,
                 unseenMessages,
+                typingUserId,
                 getUsers,
                 getMessages,
                 loadOlderMessages,

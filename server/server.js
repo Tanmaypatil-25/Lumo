@@ -7,7 +7,7 @@ import userRouter from "./routes/userRoutes.js";
 import messageRouter from "./routes/messageRoutes.js";
 import { Server } from "socket.io";
 import jwt from "jsonwebtoken";
-import { addUserSocket, removeUserSocket, getOnlineUsers } from "./socket/socketManager.js";
+import { addUserSocket, removeUserSocket, getOnlineUsers, getUserSockets } from "./socket/socketManager.js";
 import { validateEnv } from "./config/env.js";
 
 
@@ -69,6 +69,26 @@ io.on("connection", (socket) => {
             getOnlineUsers()
         );
     }
+
+    socket.on("typing", (receiverId) => {
+        const receiverSockets = getUserSockets(receiverId);
+
+        receiverSockets.forEach((socketId) => {
+            io.to(socketId).emit("typing", {
+                senderId: socket.userId
+            });
+        });
+    });
+
+    socket.on("stopTyping", (receiverId) => {
+        const receiverSockets = getUserSockets(receiverId);
+
+        receiverSockets.forEach((socketId) => {
+            io.to(socketId).emit("stopTyping", {
+                senderId: socket.userId
+            });
+        });
+    });
 
     socket.on("disconnect", () => {
         const becameOffline = removeUserSocket(

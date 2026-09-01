@@ -110,16 +110,65 @@ export const getMessages = async (req, res) => {
                 ? messages[messages.length - 1].createdAt
                 : null;
 
-        await Message.updateMany(
-            {
+        const unreadMessages =
+            await Message.find({
                 senderId: selectedUserId,
                 receiverId: myId,
                 seen: false
-            },
-            {
-                seen: true
-            }
-        );
+            })
+                .select("_id")
+                .lean();
+
+
+        if (unreadMessages.length > 0) {
+
+            const unreadMessageIds =
+                unreadMessages.map(
+                    (message) => message._id
+                );
+
+
+            await Message.updateMany(
+                {
+                    _id: {
+                        $in: unreadMessageIds
+                    }
+                },
+                {
+                    $set: {
+                        seen: true
+                    }
+                }
+            );
+
+
+            // Notify sender in real time
+            const senderSockets =
+                getUserSockets(
+                    selectedUserId
+                );
+
+
+            senderSockets.forEach(
+                (socketId) => {
+
+                    unreadMessageIds.forEach(
+                        (messageId) => {
+
+                            io.to(socketId).emit(
+                                "messageSeen",
+                                {
+                                    messageId:
+                                        messageId.toString()
+                                }
+                            );
+
+                        }
+                    );
+
+                }
+            );
+        }
 
         return successResponse(res, 200, {
             messages: messages.reverse(),
@@ -139,14 +188,11 @@ export const getMessages = async (req, res) => {
 export const markMessagesAsSeen = async (req, res) => {
     try {
         const { id } = req.params;
+        const userId = req.user._id;
 
-        const updatedMessage = await Message.findByIdAndUpdate(
-            id,
-            { seen: true },
-            { new: true }
-        );
+        const message = await Message.findById(id);
 
-        if (!updatedMessage) {
+        if (!message) {
             return errorResponse(
                 res,
                 404,
@@ -154,21 +200,54 @@ export const markMessagesAsSeen = async (req, res) => {
             );
         }
 
-        const userId = req.user._id.toString();
-
-        const userSockets = getUserSockets(userId);
-
-        userSockets.forEach((socketId) => {
-            io.to(socketId).emit(
-                "messageSeen",
-                updatedMessage._id.toString()
+        if (
+            message.receiverId.toString() !==
+            userId.toString()
+        ) {
+            return errorResponse(
+                res,
+                403,
+                "You cannot mark this message as seen"
             );
-        });
+        }
 
-        return successResponse(res, 200);
+        if (!message.seen) {
+            message.seen = true;
+
+            await message.save();
+
+            const senderSockets =
+                getUserSockets(
+                    message.senderId.toString()
+                );
+
+            senderSockets.forEach(
+                (socketId) => {
+                    io.to(socketId).emit(
+                        "messageSeen",
+                        {
+                            messageId:
+                                message._id.toString()
+                        }
+                    );
+                }
+            );
+        }
+
+        return successResponse(
+            res,
+            200,
+            {
+                message:
+                    "Message marked as seen"
+            }
+        );
 
     } catch (error) {
-        console.log(error.message);
+        console.error(
+            "Mark message seen error:",
+            error.message
+        );
 
         return errorResponse(res);
     }
