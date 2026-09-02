@@ -36,6 +36,8 @@ const ChatContainer = () => {
   const messagesContainerRef = useRef(null);
   const scrollEnd = useRef();
   const typingTimeoutRef = useRef(null);
+  const initialScrollDoneRef = useRef(false);
+  const messageInputRef = useRef(null);
 
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -213,6 +215,10 @@ const ChatContainer = () => {
           "stopTyping",
           selectedUser._id
         );
+
+        requestAnimationFrame(() => {
+          messageInputRef.current?.focus();
+        });
       }
     } finally {
       setSending(false);
@@ -225,20 +231,28 @@ const ChatContainer = () => {
 
     if (!container) return;
 
+    if (!initialScrollDoneRef.current) {
+      return;
+    }
+
     if (
       container.scrollTop <= 50 &&
       hasMoreMessages &&
-      !messagesLoading
+      !messagesLoading &&
+      !loadingOlderMessages
     ) {
-      const previousScrollHeight = container.scrollHeight;
+      const previousScrollHeight =
+        container.scrollHeight;
 
       await loadOlderMessages();
 
       requestAnimationFrame(() => {
-        const newScrollHeight = container.scrollHeight;
+        const newScrollHeight =
+          container.scrollHeight;
 
         container.scrollTop =
-          newScrollHeight - previousScrollHeight;
+          newScrollHeight -
+          previousScrollHeight;
       });
     }
   };
@@ -282,6 +296,10 @@ const ChatContainer = () => {
           "stopTyping",
           selectedUser._id
         );
+
+        requestAnimationFrame(() => {
+          messageInputRef.current?.focus();
+        });
       }
     } finally {
       setSending(false);
@@ -299,12 +317,20 @@ const ChatContainer = () => {
     );
   };
 
+  useEffect(() => {
+    if (selectedUser && !messagesLoading) {
+      messageInputRef.current?.focus();
+    }
+  }, [selectedUser, messagesLoading]);
+
 
   useEffect(() => {
     if (!selectedUser) {
       setMessages([]);
       return;
     }
+
+    initialScrollDoneRef.current = false;
 
     setMessages([]);
 
@@ -336,7 +362,12 @@ const ChatContainer = () => {
       controller.abort();
     };
 
-  }, [selectedUser]);
+  }, [
+    selectedUser,
+    setMessages,
+    getMessages,
+    socket
+  ]);
 
   useEffect(() => {
     if (
@@ -344,9 +375,15 @@ const ChatContainer = () => {
       messages.length > 0 &&
       !loadingOlderMessages
     ) {
+
       scrollEnd.current.scrollIntoView({
-        behavior: "smooth"
+        behavior:
+          initialScrollDoneRef.current
+            ? "smooth"
+            : "auto"
       });
+
+      initialScrollDoneRef.current = true;
     }
   }, [messages.length, loadingOlderMessages]);
 
@@ -527,125 +564,125 @@ const ChatContainer = () => {
           </div>
         ) : (
           messages.map((msg) => (
-          <div
-            key={msg._id}
-            className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id ? "flex-row-reverse" : ""
-              }`}
-          >
-            {msg.image ? (
-              <img
-                src={msg.image}
-                className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8'
-                alt=""
-              />
-            ) : editingMessageId === msg._id ? (
-              <div className="mb-8">
-                <input
-                  type="text"
-                  value={editInput}
-                  onChange={(e) => setEditInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleEditMessage(msg._id);
-                    }
-
-                    if (e.key === "Escape") {
-                      cancelEditing();
-                    }
-                  }}
-                  className="p-2 text-sm rounded bg-gray-700 text-white outline-none"
-                  autoFocus
+            <div
+              key={msg._id}
+              className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id ? "flex-row-reverse" : ""
+                }`}
+            >
+              {msg.image ? (
+                <img
+                  src={msg.image}
+                  className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8'
+                  alt=""
                 />
+              ) : editingMessageId === msg._id ? (
+                <div className="mb-8">
+                  <input
+                    type="text"
+                    value={editInput}
+                    onChange={(e) => setEditInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleEditMessage(msg._id);
+                      }
 
-                <div className="flex gap-2 mt-1">
-                  <button
-                    type="button"
-                    onClick={() => handleEditMessage(msg._id)}
-                    className="text-xs text-green-400"
-                  >
-                    Save
-                  </button>
+                      if (e.key === "Escape") {
+                        cancelEditing();
+                      }
+                    }}
+                    className="p-2 text-sm rounded bg-gray-700 text-white outline-none"
+                    autoFocus
+                  />
 
-                  <button
-                    type="button"
-                    onClick={cancelEditing}
-                    className="text-xs text-gray-400"
-                  >
-                    Cancel
-                  </button>
+                  <div className="flex gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleEditMessage(msg._id)}
+                      className="text-xs text-green-400"
+                    >
+                      Save
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={cancelEditing}
+                      className="text-xs text-gray-400"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <p
-                className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id
-                  ? "rounded-br-none"
-                  : "rounded-bl-none"
-                  }`}
-              >
-                {msg.text}
+              ) : (
+                <p
+                  className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id
+                    ? "rounded-br-none"
+                    : "rounded-bl-none"
+                    }`}
+                >
+                  {msg.text}
 
-                {msg.edited && (
-                  <span className="ml-1 text-[10px] text-gray-400">
-                    (edited)
-                  </span>
-                )}
-              </p>
-            )}
-
-            <div className='text-center text-xs'>
-              <img
-                src={
-                  msg.senderId === authUser._id
-                    ? authUser?.profilePic || assets.avatar_icon
-                    : selectedUser?.profilePic || assets.avatar_icon
-                }
-                className='w-7 rounded-full'
-                alt=""
-              />
-
-              <div className="text-gray-500">
-                <p>
-                  {formatMessageTime(
-                    msg.createdAt
+                  {msg.edited && (
+                    <span className="ml-1 text-[10px] text-gray-400">
+                      (edited)
+                    </span>
                   )}
                 </p>
+              )}
 
-                {msg.senderId === authUser._id && msg.text && (
-                  <button
-                    type="button"
-                    onClick={() => startEditing(msg)}
-                    className="text-xs text-blue-400 hover:text-blue-300 mr-2"
-                  >
-                    Edit
-                  </button>
-                )}
+              <div className='text-center text-xs'>
+                <img
+                  src={
+                    msg.senderId === authUser._id
+                      ? authUser?.profilePic || assets.avatar_icon
+                      : selectedUser?.profilePic || assets.avatar_icon
+                  }
+                  className='w-7 rounded-full'
+                  alt=""
+                />
 
-                {msg.senderId === authUser._id && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDeleteMessage(
-                        msg._id
-                      )
-                    }
-                    className="text-xs text-red-400 hover:text-red-300"
-                  >
-                    Delete
-                  </button>
-                )}
-
-                {msg.senderId === authUser._id && (
-                  <p className="text-[10px] mt-1">
-                    {msg.seen
-                      ? "Seen"
-                      : "Sent"}
+                <div className="text-gray-500">
+                  <p>
+                    {formatMessageTime(
+                      msg.createdAt
+                    )}
                   </p>
-                )}
-              </div>
-            </div>
 
-          </div>
-        ))
+                  {msg.senderId === authUser._id && msg.text && (
+                    <button
+                      type="button"
+                      onClick={() => startEditing(msg)}
+                      className="text-xs text-blue-400 hover:text-blue-300 mr-2"
+                    >
+                      Edit
+                    </button>
+                  )}
+
+                  {msg.senderId === authUser._id && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleDeleteMessage(
+                          msg._id
+                        )
+                      }
+                      className="text-xs text-red-400 hover:text-red-300"
+                    >
+                      Delete
+                    </button>
+                  )}
+
+                  {msg.senderId === authUser._id && (
+                    <p className="text-[10px] mt-1">
+                      {msg.seen
+                        ? "Seen"
+                        : "Sent"}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+            </div>
+          ))
         )}
 
         <div ref={scrollEnd}></div>
@@ -655,7 +692,7 @@ const ChatContainer = () => {
       {/* ------- bottom search area ------- */}
       <div className='absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3'>
         <div className='flex-1 flex items-center bg-gray-100/12 px-3 rounded-full'>
-          <input onChange={handleInputChange} value={input} disabled={sending} onKeyDown={(e) => e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a message' className='flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400' />
+          <input ref={messageInputRef} onChange={handleInputChange} value={input} disabled={sending} onKeyDown={(e) => e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a message' className='flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400' />
           <input
             onChange={handleSendImage}
             type="file"

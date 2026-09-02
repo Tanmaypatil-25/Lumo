@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }) => {
                     );
                 }
 
-            } catch (error) {
+            } catch {
 
                 localStorage.removeItem(
                     "token"
