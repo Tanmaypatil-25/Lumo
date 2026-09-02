@@ -1,11 +1,11 @@
-import { useContext, useEffect, useState, useMemo } from 'react'
-import assets from '../assets/assets'
-import { useNavigate } from 'react-router-dom'
-import { AuthContext } from '../../context/AuthContext'
-import { ChatContext } from '../../context/ChatContext'
+import { useContext, useEffect, useMemo, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+
+import assets from "../assets/assets";
+import { AuthContext } from "../../context/AuthContext";
+import { ChatContext } from "../../context/ChatContext";
 
 const Sidebar = () => {
-
     const {
         getUsers,
         users,
@@ -13,12 +13,14 @@ const Sidebar = () => {
         usersError,
         selectedUser,
         setSelectedUser,
-        unseenMessages
+        unseenMessages,
     } = useContext(ChatContext);
 
     const { logout, onlineUsers } = useContext(AuthContext);
 
     const [input, setInput] = useState("");
+    const [menuOpen, setMenuOpen] = useState(false);
+    const menuRef = useRef(null);
 
     const navigate = useNavigate();
 
@@ -30,9 +32,7 @@ const Sidebar = () => {
         }
 
         return users.filter((user) =>
-            user.fullName
-                ?.toLowerCase()
-                .includes(searchTerm)
+            user.fullName?.toLowerCase().includes(searchTerm)
         );
     }, [users, input]);
 
@@ -40,123 +40,259 @@ const Sidebar = () => {
         getUsers();
     }, [getUsers]);
 
+    useEffect(() => {
+        if (!menuOpen) return;
+
+        const handleClickOutside = (event) => {
+            if (
+                menuRef.current &&
+                !menuRef.current.contains(event.target)
+            ) {
+                setMenuOpen(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+        };
+    }, [menuOpen]);
+
     return (
-        <div className={`bg-[#8185B2]/10 h-full p-5 rounded-r-xl overflow-y-scroll text-white ${selectedUser ? "max-md:hidden" : ""}`}>
-            <div className='pb-5'>
+        <aside
+            className={`relative flex h-full min-h-0 flex-col border-r border-white/[0.07] bg-white/[0.025] backdrop-blur-2xl ${selectedUser ? "max-md:hidden" : ""
+                }`}
+        >
+            {/* ================= HEADER ================= */}
 
-                <div className='flex justify-between items-center'>
-                    <img src={assets.logo} alt="logo" className='max-w-40' />
-                    <div className='relative py-2 group'>
-                        <img src={assets.menu_icon} alt="menu" className='max-h-5 cursor-pointer' />
-                        <div className='absolute top-full right-0 z-20 w-32 p-5 rounded-md bg-[#282142] border border-gray-600 text-gray-100 hidden group-hover:block'>
-                            <p onClick={() => navigate("/profile")} className='cursor-pointer text-sm'>
-                                Edit Profile
-                            </p>
+            <div className="shrink-0 px-5 pb-4 pt-5">
+                <div className="flex items-center justify-between">
+                    <button
+                        type="button"
+                        className="flex items-center"
+                        aria-label="Lumo home"
+                    >
+                        <img
+                            src={assets.logo}
+                            alt="Lumo"
+                            className="h-8 w-auto object-contain"
+                        />
+                    </button>
 
-                            <hr className='my-2 border-t border-gray-500' />
+                    <div ref={menuRef} className="relative">
+                        <button
+                            type="button"
+                            onClick={() => setMenuOpen((previous) => !previous)}
+                            className="lumo-interactive flex h-9 w-9 items-center justify-center rounded-xl border border-transparent hover:border-white/[0.08] hover:bg-white/[0.06]"
+                            aria-label="Open menu"
+                            aria-expanded={menuOpen}
+                        >
+                            <img
+                                src={assets.menu_icon}
+                                alt=""
+                                className="h-[18px] w-[18px] opacity-75"
+                            />
+                        </button>
 
-                            <p onClick={() => logout()} className='cursor-pointer text-sm'>
-                                Logout
-                            </p>
-                        </div>
+                        {menuOpen && (
+                            <div className="absolute right-0 top-11 z-30 w-44 overflow-hidden rounded-2xl border border-white/[0.10] bg-[#17171D]/95 p-1.5 shadow-2xl shadow-black/40 backdrop-blur-2xl">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setMenuOpen(false);
+                                        navigate("/profile");
+                                    }}
+                                    className="lumo-interactive flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm text-[var(--lumo-text-secondary)] hover:text-white"
+                                >
+                                    Edit profile
+                                </button>
+
+                                <div className="mx-2 my-1 h-px bg-white/[0.07]" />
+
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setMenuOpen(false);
+                                        logout();
+                                    }}
+                                    className="lumo-interactive flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm text-red-300 hover:bg-red-400/[0.08] hover:text-red-200"
+                                >
+                                    Log out
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className='bg-[#282142] rounded-full flex items-center gap-2 py-3 px-4 mt-5'>
-                    <img src={assets.search_icon} alt="search" className='w-3' />
-                    <input
-                        onChange={(e) => setInput(e.target.value)}
-                        value={input}
-                        type="text"
-                        className='bg-transparent border-none outline-none text-white text-xs placeholder-[#c8c8c8] flex-1'
-                        placeholder='Search User...'
+                {/* ================= TITLE ================= */}
+
+                <div className="mt-6">
+                    <h1 className="text-xl font-semibold tracking-[-0.02em] text-[var(--lumo-text-primary)]">
+                        Messages
+                    </h1>
+
+                    <p className="mt-1 text-xs text-[var(--lumo-text-muted)]">
+                        Stay connected with your conversations
+                    </p>
+                </div>
+
+                {/* ================= SEARCH ================= */}
+
+                <div className="mt-5 flex h-11 items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.04] pl-4 pr-2.5 transition-all duration-200 hover:bg-white/[0.055] focus-within:border-white/[0.12] focus-within:bg-white/[0.065] focus-within:shadow-[0_0_0_3px_rgba(139,92,246,0.06)]">
+                    <img
+                        src={assets.search_icon}
+                        alt=""
+                        className="h-4 w-4 shrink-0 opacity-50"
                     />
+
+                    <input
+                        value={input}
+                        onChange={(event) => setInput(event.target.value)}
+                        type="text"
+                        placeholder="Search conversations"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-[var(--lumo-text-primary)] outline-none placeholder:text-[var(--lumo-text-muted)]"
+                    />
+
+                    {input && (
+                        <button
+                            type="button"
+                            onClick={() => setInput("")}
+                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg font-light leading-none text-zinc-400 transition-all duration-200 hover:bg-white/[0.10] hover:text-white active:scale-90"
+                            aria-label="Clear search"
+                        >
+                            ×
+                        </button>
+                    )}
                 </div>
             </div>
 
-            <div className='flex flex-col'>
+            {/* ================= CONVERSATIONS ================= */}
+
+            <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+                <div className="px-2 pb-2 pt-1">
+                    <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--lumo-text-muted)]">
+                        Conversations
+                    </p>
+                </div>
 
                 {usersLoading && users.length === 0 && (
-                    <p className='text-center text-sm text-gray-400 py-6'>
-                        Loading conversations...
-                    </p>
+                    <div className="flex min-h-32 items-center justify-center">
+                        <p className="text-sm text-[var(--lumo-text-muted)]">
+                            Loading conversations...
+                        </p>
+                    </div>
                 )}
 
                 {!usersLoading && usersError && users.length === 0 && (
-                    <div className='flex flex-col items-center gap-2 py-6'>
-                        <p className='text-center text-sm text-red-300'>
+                    <div className="mx-2 flex min-h-36 flex-col items-center justify-center rounded-2xl border border-red-400/10 bg-red-400/[0.03] px-4 text-center">
+                        <p className="text-sm text-red-300">
                             Couldn't load conversations.
                         </p>
 
                         <button
                             type="button"
                             onClick={getUsers}
-                            className='text-xs text-violet-300 hover:text-violet-200'
+                            className="mt-3 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2 text-xs font-medium text-white transition hover:bg-white/[0.08]"
                         >
                             Retry
                         </button>
                     </div>
                 )}
 
-                {!usersLoading &&
-                    !usersError &&
-                    users.length === 0 && (
-                        <p className='text-center text-sm text-gray-400 py-6'>
+                {!usersLoading && !usersError && users.length === 0 && (
+                    <div className="flex min-h-32 items-center justify-center px-4 text-center">
+                        <p className="text-sm text-[var(--lumo-text-muted)]">
                             No conversations available.
                         </p>
-                    )}
+                    </div>
+                )}
 
                 {!usersLoading &&
                     !usersError &&
                     users.length > 0 &&
                     filteredUsers.length === 0 && (
-                        <p className='text-center text-sm text-gray-400 py-6'>
-                            No users match your search.
-                        </p>
+                        <div className="flex min-h-32 items-center justify-center px-4 text-center">
+                            <p className="text-sm text-[var(--lumo-text-muted)]">
+                                No users match your search.
+                            </p>
+                        </div>
                     )}
 
-                {filteredUsers.map((user) => (
-                    <div
-                        onClick={() => {
-                            setSelectedUser(user);
-                        }}
-                        key={user._id}
-                        className={`relative flex items-center gap-2 p-2 pl-4 rounded cursor-pointer max-sm:text-sm ${selectedUser?._id === user._id
-                                ? "bg-[#282142]/50"
-                                : ""
-                            }`}
-                    >
-                        <img
-                            src={user?.profilePic || assets.avatar_icon}
-                            alt=""
-                            className='w-[35px] aspect-[1/1] rounded-full'
-                        />
+                <div className="space-y-1">
+                    {filteredUsers.map((user) => {
+                        const isOnline = onlineUsers.includes(user._id);
+                        const isSelected = selectedUser?._id === user._id;
+                        const unreadCount = unseenMessages[user._id] || 0;
 
-                        <div className='flex flex-col leading-5'>
-                            <p>{user.fullName}</p>
+                        return (
+                            <button
+                                type="button"
+                                key={user._id}
+                                onClick={() => setSelectedUser(user)}
+                                className={`lumo-interactive group relative flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left ${isSelected
+                                    ? "border-violet-400/20 bg-violet-500/[0.12]"
+                                    : "border-transparent hover:border-white/[0.05] hover:bg-white/[0.045]"
+                                    }`}
+                            >
+                                {/* Avatar */}
 
-                            {onlineUsers.includes(user._id) ? (
-                                <span className='text-green-400 text-xs'>
-                                    Online
-                                </span>
-                            ) : (
-                                <span className='text-neutral-400 text-xs'>
-                                    Offline
-                                </span>
-                            )}
-                        </div>
+                                <div className="relative shrink-0">
+                                    <img
+                                        src={user?.profilePic || assets.avatar_icon}
+                                        alt={user.fullName}
+                                        className="h-11 w-11 rounded-full object-cover ring-1 ring-white/[0.08]"
+                                    />
 
-                        {unseenMessages[user._id] > 0 && (
-                            <p className='absolute top-4 right-4 text-xs h-5 w-5 flex justify-center items-center rounded-full bg-violet-500/50'>
-                                {unseenMessages[user._id]}
-                            </p>
-                        )}
-                    </div>
-                ))}
+                                    <span
+                                        className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#111116] ${isOnline
+                                            ? "bg-[var(--lumo-success)]"
+                                            : "bg-zinc-600"
+                                            }`}
+                                    />
+                                </div>
 
+                                {/* User information */}
+
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p
+                                            className={`truncate text-sm font-medium ${isSelected
+                                                ? "text-white"
+                                                : "text-[var(--lumo-text-primary)]"
+                                                }`}
+                                        >
+                                            {user.fullName}
+                                        </p>
+
+                                        {unreadCount > 0 && (
+                                            <span className="flex min-h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-[var(--lumo-primary)] px-1.5 text-[10px] font-semibold text-white shadow-lg shadow-violet-950/20">
+                                                {unreadCount > 99 ? "99+" : unreadCount}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-1 flex items-center gap-1.5">
+                                        <span
+                                            className={`text-xs ${isOnline
+                                                ? "text-green-400"
+                                                : "text-[var(--lumo-text-muted)]"
+                                                }`}
+                                        >
+                                            {isOnline ? "Online" : "Offline"}
+                                        </span>
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
-        </div>
-    )
-}
+        </aside>
+    );
+};
 
-export default Sidebar
+export default Sidebar;
