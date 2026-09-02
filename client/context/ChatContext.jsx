@@ -27,8 +27,17 @@ export const ChatProvider = ({ children }) => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [unseenMessages, setUnseenMessages] = useState({});
 
+    const [usersLoading, setUsersLoading] =
+        useState(false);
+
+    const [usersError, setUsersError] =
+        useState("");
+
     const [messagesLoading, setMessagesLoading] =
         useState(false);
+
+    const [messagesError, setMessagesError] =
+        useState("");
 
     const [messageCursor, setMessageCursor] =
         useState(null);
@@ -84,6 +93,8 @@ export const ChatProvider = ({ children }) => {
         async () => {
 
             try {
+                setUsersLoading(true);
+                setUsersError("");
 
                 const { data } =
                     await axios.get(
@@ -101,12 +112,18 @@ export const ChatProvider = ({ children }) => {
 
             } catch (error) {
 
-                toast.error(
+                const message =
                     error.response
                         ?.data
                         ?.message ||
-                    error.message
-                );
+                    error.message;
+
+                setUsersError(message);
+
+                toast.error(message);
+
+            } finally {
+                setUsersLoading(false);
             }
         },
         [axios]
@@ -123,6 +140,7 @@ export const ChatProvider = ({ children }) => {
             try {
 
                 setMessagesLoading(true);
+                setMessagesError("");
 
 
                 const { data } =
@@ -183,12 +201,14 @@ export const ChatProvider = ({ children }) => {
                     latestMessagesRequest.current
                 ) {
 
-                    toast.error(
+                    const message =
                         error.response
                             ?.data
                             ?.message ||
-                        error.message
-                    );
+                        error.message;
+
+                    setMessagesError(message);
+                    toast.error(message);
                 }
 
             } finally {
@@ -445,7 +465,11 @@ export const ChatProvider = ({ children }) => {
 
             setUnseenMessages({});
 
+            setUsersLoading(false);
+            setUsersError("");
+
             setMessagesLoading(false);
+            setMessagesError("");
 
             setMessageCursor(null);
 
@@ -677,11 +701,14 @@ export const ChatProvider = ({ children }) => {
                 setMessages,
 
                 messagesLoading,
+                messagesError,
 
                 hasMoreMessages,
                 loadingOlderMessages,
 
                 users,
+                usersLoading,
+                usersError,
 
                 selectedUser,
                 setSelectedUser,
@@ -700,9 +727,12 @@ export const ChatProvider = ({ children }) => {
             [
                 messages,
                 messagesLoading,
+                messagesError,
                 hasMoreMessages,
                 loadingOlderMessages,
                 users,
+                usersLoading,
+                usersError,
                 selectedUser,
                 unseenMessages,
                 typingUserId,

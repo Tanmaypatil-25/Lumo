@@ -21,6 +21,7 @@ const ChatContainer = () => {
     loadOlderMessages,
     hasMoreMessages,
     messagesLoading,
+    messagesError,
     loadingOlderMessages,
     typingUserId,
     deleteMessage,
@@ -287,6 +288,18 @@ const ChatContainer = () => {
     }
   };
 
+  const retryMessages = () => {
+    if (!selectedUser) return;
+
+    const controller = new AbortController();
+
+    getMessages(
+      selectedUser._id,
+      controller.signal
+    );
+  };
+
+
   useEffect(() => {
     if (!selectedUser) {
       setMessages([]);
@@ -477,7 +490,43 @@ const ChatContainer = () => {
         onScroll={handleScroll}
         className='flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6'
       >
-        {messages.map((msg) => (
+        {loadingOlderMessages && (
+          <p className="text-center text-xs text-gray-400 py-2">
+            Loading older messages...
+          </p>
+        )}
+
+        {messagesLoading && messages.length === 0 ? (
+          <div className="flex flex-1 items-center justify-center">
+            <p className="text-sm text-gray-400">
+              Loading messages...
+            </p>
+          </div>
+        ) : messagesError && messages.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-2">
+            <p className="text-sm text-red-300 text-center">
+              Couldn&apos;t load this conversation.
+            </p>
+
+            <button
+              type="button"
+              onClick={retryMessages}
+              className="text-xs text-violet-300 hover:text-violet-200"
+            >
+              Retry
+            </button>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <p className="text-sm text-gray-300">
+              No messages yet
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Send a message to start the conversation.
+            </p>
+          </div>
+        ) : (
+          messages.map((msg) => (
           <div
             key={msg._id}
             className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id ? "flex-row-reverse" : ""
@@ -596,7 +645,8 @@ const ChatContainer = () => {
             </div>
 
           </div>
-        ))}
+        ))
+        )}
 
         <div ref={scrollEnd}></div>
 
