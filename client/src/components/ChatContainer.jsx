@@ -24,7 +24,8 @@ const ChatContainer = () => {
     loadingOlderMessages,
     typingUserId,
     deleteMessage,
-    editMessage
+    editMessage,
+    searchMessages
   } = useContext(ChatContext);
 
   const { authUser, onlineUsers, socket } = useContext(AuthContext)
@@ -43,6 +44,18 @@ const ChatContainer = () => {
 
   const [editInput, setEditInput] =
     useState("");
+
+  const [searchOpen, setSearchOpen] =
+    useState(false);
+
+  const [searchQuery, setSearchQuery] =
+    useState("");
+
+  const [searchResults, setSearchResults] =
+    useState([]);
+
+  const [searching, setSearching] =
+    useState(false);
 
   const handleDeleteMessage = async (
     messageId
@@ -71,6 +84,43 @@ const ChatContainer = () => {
   const cancelEditing = () => {
     setEditingMessageId(null);
     setEditInput("");
+  };
+
+  const handleSearchMessages = async (e) => {
+    e?.preventDefault();
+
+    const cleanQuery =
+      searchQuery.trim();
+
+    if (!cleanQuery) {
+      setSearchResults([]);
+      return;
+    }
+
+    if (!selectedUser) {
+      return;
+    }
+
+    try {
+      setSearching(true);
+
+      const results =
+        await searchMessages(
+          selectedUser._id,
+          cleanQuery
+        );
+
+      setSearchResults(results);
+
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
   };
 
   const handleEditMessage = async (
@@ -245,6 +295,10 @@ const ChatContainer = () => {
 
     setMessages([]);
 
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+
     const controller = new AbortController();
 
     getMessages(
@@ -307,9 +361,115 @@ const ChatContainer = () => {
           )}
 
         </div>
+        <button
+          type="button"
+          onClick={() =>
+            setSearchOpen(
+              (current) => !current
+            )
+          }
+          className="text-sm text-gray-300 hover:text-white"
+        >
+          Search
+        </button>
         <img onClick={() => setSelectedUser(null)} src={assets.arrow_icon} alt="" className='md:hidden max-w-7' />
         <img src={assets.help_icon} alt="" className='max-md:hidden max-w-5' />
       </div>
+
+      {searchOpen && (
+        <div className="mx-4 mt-2 relative">
+
+          <form
+            onSubmit={
+              handleSearchMessages
+            }
+            className="flex gap-2"
+          >
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) =>
+                setSearchQuery(
+                  e.target.value
+                )
+              }
+              placeholder="Search messages..."
+              className="flex-1 p-2 rounded bg-gray-800 text-white outline-none text-sm"
+              autoFocus
+            />
+
+            <button
+              type="submit"
+              disabled={searching}
+              className="px-3 text-sm text-violet-300"
+            >
+              {searching
+                ? "..."
+                : "Search"}
+            </button>
+
+            <button
+              type="button"
+              onClick={closeSearch}
+              className="px-2 text-gray-400"
+            >
+              ✕
+            </button>
+          </form>
+
+          {searchQuery &&
+            !searching &&
+            searchResults.length === 0 && (
+              <p className="text-xs text-gray-500 mt-2">
+                No matching messages
+              </p>
+            )}
+
+          {searchResults.length > 0 && (
+            <div className="mt-2 max-h-52 overflow-y-auto bg-gray-900 rounded p-2">
+
+              <p className="text-xs text-gray-500 mb-2">
+                {searchResults.length} result
+                {searchResults.length !== 1
+                  ? "s"
+                  : ""}
+              </p>
+
+              {searchResults.map(
+                (message) => (
+                  <div
+                    key={
+                      message._id
+                    }
+                    className="border-b border-gray-800 py-2 last:border-none"
+                  >
+                    <p className="text-sm text-white">
+                      {
+                        message.text
+                      }
+                    </p>
+
+                    <p className="text-[10px] text-gray-500 mt-1">
+                      {message.senderId ===
+                        authUser._id
+                        ? "You"
+                        : selectedUser.fullName}
+
+                      {" • "}
+
+                      {formatMessageTime(
+                        message.createdAt
+                      )}
+                    </p>
+                  </div>
+                )
+              )}
+
+            </div>
+          )}
+
+        </div>
+      )}
 
       {/* ------ chat_area ------ */}
       <div
@@ -369,8 +529,8 @@ const ChatContainer = () => {
             ) : (
               <p
                 className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id
-                    ? "rounded-br-none"
-                    : "rounded-bl-none"
+                  ? "rounded-br-none"
+                  : "rounded-bl-none"
                   }`}
               >
                 {msg.text}

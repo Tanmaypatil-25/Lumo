@@ -372,6 +372,35 @@ export const ChatProvider = ({ children }) => {
         [axios]
     );
 
+    const searchMessages = useCallback(
+        async (userId, query) => {
+            try {
+                const { data } =
+                    await axios.get(
+                        `/api/messages/search/${userId}`,
+                        {
+                            params: {
+                                q: query
+                            }
+                        }
+                    );
+
+                return data.messages || [];
+
+            } catch (error) {
+                toast.error(
+                    error.response
+                        ?.data
+                        ?.message ||
+                    error.message
+                );
+
+                return [];
+            }
+        },
+        [axios]
+    );
+
     // Edit message func
     const editMessage = useCallback(
         async (messageId, text) => {
@@ -660,6 +689,7 @@ export const ChatProvider = ({ children }) => {
                 unseenMessages,
                 typingUserId,
                 deleteMessage,
+                searchMessages,
 
                 getUsers,
                 getMessages,
@@ -681,7 +711,8 @@ export const ChatProvider = ({ children }) => {
                 loadOlderMessages,
                 sendMessage,
                 deleteMessage,
-                editMessage
+                editMessage,
+                searchMessages
             ]
         );
 

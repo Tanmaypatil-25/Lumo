@@ -10,13 +10,110 @@ import { getUserSockets } from "../socket/socketManager.js";
 import {
     MESSAGE_PAGE_LIMIT,
     MAX_MESSAGE_PAGE_LIMIT,
-    MAX_MESSAGE_LENGTH
+    MAX_MESSAGE_LENGTH,
+    MAX_SEARCH_RESULTS
 } from "../config/constants.js";
 import {
     successResponse,
     errorResponse
 } from "../utils/response.js";
 
+// chat Search controller logic
+export const searchMessages = async (
+    req,
+    res
+) => {
+    try {
+        const { id } = req.params;
+        const { q } = req.query;
+
+        const myId = req.user._id;
+
+        if (
+            !mongoose.Types.ObjectId.isValid(id)
+        ) {
+            return errorResponse(
+                res,
+                400,
+                "Invalid user ID"
+            );
+        }
+
+        const searchQuery =
+            typeof q === "string"
+                ? q.trim()
+                : "";
+
+        if (!searchQuery) {
+            return successResponse(
+                res,
+                200,
+                {
+                    messages: []
+                }
+            );
+        }
+
+        // Escape RegExp special characters
+        const escapedQuery =
+            searchQuery.replace(
+                /[.*+?^${}()|[\]\\]/g,
+                "\\$&"
+            );
+
+        const searchRegex =
+            new RegExp(
+                escapedQuery,
+                "i"
+            );
+
+        const messages =
+            await Message.find({
+                $and: [
+                    {
+                        $or: [
+                            {
+                                senderId: myId,
+                                receiverId: id
+                            },
+                            {
+                                senderId: id,
+                                receiverId: myId
+                            }
+                        ]
+                    },
+                    {
+                        text: {
+                            $regex: searchRegex
+                        }
+                    }
+                ]
+            })
+                .sort({
+                    createdAt: -1
+                })
+                .limit(
+                    MAX_SEARCH_RESULTS
+                )
+                .lean();
+
+        return successResponse(
+            res,
+            200,
+            {
+                messages
+            }
+        );
+
+    } catch (error) {
+        console.error(
+            "Search messages error:",
+            error.message
+        );
+
+        return errorResponse(res);
+    }
+};
 
 // Edit a message
 export const editMessage = async (req, res) => {
