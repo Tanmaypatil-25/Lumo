@@ -372,6 +372,36 @@ export const ChatProvider = ({ children }) => {
         [axios]
     );
 
+    // Edit message func
+    const editMessage = useCallback(
+        async (messageId, text) => {
+
+            try {
+                const { data } =
+                    await axios.put(
+                        `/api/messages/edit/${messageId}`,
+                        {
+                            text
+                        }
+                    );
+
+                return data.success;
+
+            } catch (error) {
+
+                toast.error(
+                    error.response
+                        ?.data
+                        ?.message ||
+                    error.message
+                );
+
+                return false;
+            }
+        },
+        [axios]
+    );
+
 
     // Reset chat state after logout
     useEffect(() => {
@@ -488,6 +518,29 @@ export const ChatProvider = ({ children }) => {
             );
         };
 
+        const handleMessageEdited = ({
+            messageId,
+            text,
+            edited,
+            updatedAt
+        }) => {
+
+            setMessages(
+                (prevMessages) =>
+                    prevMessages.map(
+                        (message) =>
+                            message._id === messageId
+                                ? {
+                                    ...message,
+                                    text,
+                                    edited,
+                                    updatedAt
+                                }
+                                : message
+                    )
+            );
+        };
+
         const handleMessageDeleted = ({
             messageId
         }) => {
@@ -523,6 +576,11 @@ export const ChatProvider = ({ children }) => {
         );
 
         socket.on(
+            "messageEdited",
+            handleMessageEdited
+        );
+
+        socket.on(
             "messageDeleted",
             handleMessageDeleted
         );
@@ -551,6 +609,11 @@ export const ChatProvider = ({ children }) => {
             socket.off(
                 "messageSeen",
                 handleMessageSeen
+            );
+
+            socket.off(
+                "messageEdited",
+                handleMessageEdited
             );
 
             socket.off(
@@ -601,7 +664,8 @@ export const ChatProvider = ({ children }) => {
                 getUsers,
                 getMessages,
                 loadOlderMessages,
-                sendMessage
+                sendMessage,
+                editMessage
             }),
             [
                 messages,
@@ -616,7 +680,8 @@ export const ChatProvider = ({ children }) => {
                 getMessages,
                 loadOlderMessages,
                 sendMessage,
-                deleteMessage
+                deleteMessage,
+                editMessage
             ]
         );
 

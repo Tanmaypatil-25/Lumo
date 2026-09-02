@@ -23,7 +23,8 @@ const ChatContainer = () => {
     messagesLoading,
     loadingOlderMessages,
     typingUserId,
-    deleteMessage
+    deleteMessage,
+    editMessage
   } = useContext(ChatContext);
 
   const { authUser, onlineUsers, socket } = useContext(AuthContext)
@@ -37,6 +38,12 @@ const ChatContainer = () => {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
 
+  const [editingMessageId, setEditingMessageId] =
+    useState(null);
+
+  const [editInput, setEditInput] =
+    useState("");
+
   const handleDeleteMessage = async (
     messageId
   ) => {
@@ -47,6 +54,51 @@ const ChatContainer = () => {
     if (success) {
       toast.success(
         "Message deleted"
+      );
+    }
+  };
+
+  const startEditing = (message) => {
+    setEditingMessageId(
+      message._id
+    );
+
+    setEditInput(
+      message.text || ""
+    );
+  };
+
+  const cancelEditing = () => {
+    setEditingMessageId(null);
+    setEditInput("");
+  };
+
+  const handleEditMessage = async (
+    messageId
+  ) => {
+
+    const cleanText =
+      editInput.trim();
+
+    if (!cleanText) {
+      toast.error(
+        "Message cannot be empty"
+      );
+
+      return;
+    }
+
+    const success =
+      await editMessage(
+        messageId,
+        cleanText
+      );
+
+    if (success) {
+      cancelEditing();
+
+      toast.success(
+        "Message edited"
       );
     }
   };
@@ -266,15 +318,81 @@ const ChatContainer = () => {
         className='flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6'
       >
         {messages.map((msg) => (
-          <div key={msg._id} className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && 'flex-row-reverse'}`}>
+          <div
+            key={msg._id}
+            className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id ? "flex-row-reverse" : ""
+              }`}
+          >
             {msg.image ? (
-              <img src={msg.image} className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8' alt="" />
+              <img
+                src={msg.image}
+                className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8'
+                alt=""
+              />
+            ) : editingMessageId === msg._id ? (
+              <div className="mb-8">
+                <input
+                  type="text"
+                  value={editInput}
+                  onChange={(e) => setEditInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleEditMessage(msg._id);
+                    }
+
+                    if (e.key === "Escape") {
+                      cancelEditing();
+                    }
+                  }}
+                  className="p-2 text-sm rounded bg-gray-700 text-white outline-none"
+                  autoFocus
+                />
+
+                <div className="flex gap-2 mt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleEditMessage(msg._id)}
+                    className="text-xs text-green-400"
+                  >
+                    Save
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    className="text-xs text-gray-400"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             ) : (
-              <p className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id ? 'rounded-br-none' : 'rounded-bl-none'}`}>{msg.text}</p>
+              <p
+                className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id
+                    ? "rounded-br-none"
+                    : "rounded-bl-none"
+                  }`}
+              >
+                {msg.text}
+
+                {msg.edited && (
+                  <span className="ml-1 text-[10px] text-gray-400">
+                    (edited)
+                  </span>
+                )}
+              </p>
             )}
 
             <div className='text-center text-xs'>
-              <img src={msg.senderId === authUser._id ? authUser?.profilePic || assets.avatar_icon : selectedUser?.profilePic || assets.avatar_icon} className='w-7 rounded-full' alt="" />
+              <img
+                src={
+                  msg.senderId === authUser._id
+                    ? authUser?.profilePic || assets.avatar_icon
+                    : selectedUser?.profilePic || assets.avatar_icon
+                }
+                className='w-7 rounded-full'
+                alt=""
+              />
 
               <div className="text-gray-500">
                 <p>
@@ -282,6 +400,16 @@ const ChatContainer = () => {
                     msg.createdAt
                   )}
                 </p>
+
+                {msg.senderId === authUser._id && msg.text && (
+                  <button
+                    type="button"
+                    onClick={() => startEditing(msg)}
+                    className="text-xs text-blue-400 hover:text-blue-300 mr-2"
+                  >
+                    Edit
+                  </button>
+                )}
 
                 {msg.senderId === authUser._id && (
                   <button
@@ -291,14 +419,14 @@ const ChatContainer = () => {
                         msg._id
                       )
                     }
-                    className="text-xs text-red-400 hover:text-red-300 mb-8"
+                    className="text-xs text-red-400 hover:text-red-300"
                   >
                     Delete
                   </button>
                 )}
 
                 {msg.senderId === authUser._id && (
-                  <p className="text-[10px]">
+                  <p className="text-[10px] mt-1">
                     {msg.seen
                       ? "Seen"
                       : "Sent"}

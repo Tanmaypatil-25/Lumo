@@ -18,6 +18,145 @@ import {
 } from "../utils/response.js";
 
 
+// Edit a message
+export const editMessage = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { text } = req.body;
+
+        const userId = req.user._id;
+
+        // Validate message ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return errorResponse(
+                res,
+                400,
+                "Invalid message ID"
+            );
+        }
+
+        const message =
+            await Message.findById(id);
+
+        if (!message) {
+            return errorResponse(
+                res,
+                404,
+                "Message not found"
+            );
+        }
+
+        // Only sender can edit
+        if (
+            message.senderId.toString() !==
+            userId.toString()
+        ) {
+            return errorResponse(
+                res,
+                403,
+                "You can only edit your own messages"
+            );
+        }
+
+        const cleanText =
+            typeof text === "string"
+                ? text.trim()
+                : "";
+
+        // Edited text cannot be empty
+        if (!cleanText) {
+            return errorResponse(
+                res,
+                400,
+                "Message cannot be empty"
+            );
+        }
+
+        if (
+            cleanText.length >
+            MAX_MESSAGE_LENGTH
+        ) {
+            return errorResponse(
+                res,
+                400,
+                "Message is too long"
+            );
+        }
+
+        // Nothing actually changed
+        if (message.text === cleanText) {
+            return successResponse(
+                res,
+                200,
+                {
+                    updatedMessage: message
+                }
+            );
+        }
+
+        message.text = cleanText;
+        message.edited = true;
+
+        await message.save();
+
+        const messageData = {
+            messageId:
+                message._id.toString(),
+
+            text: message.text,
+
+            edited: true,
+
+            updatedAt: message.updatedAt
+        };
+
+        // Notify receiver
+        const receiverSockets =
+            getUserSockets(
+                message.receiverId.toString()
+            );
+
+        receiverSockets.forEach(
+            (socketId) => {
+                io.to(socketId).emit(
+                    "messageEdited",
+                    messageData
+                );
+            }
+        );
+
+        // Synchronize sender's other tabs/devices
+        const senderSockets =
+            getUserSockets(
+                message.senderId.toString()
+            );
+
+        senderSockets.forEach(
+            (socketId) => {
+                io.to(socketId).emit(
+                    "messageEdited",
+                    messageData
+                );
+            }
+        );
+
+        return successResponse(
+            res,
+            200,
+            {
+                updatedMessage: message
+            }
+        );
+
+    } catch (error) {
+        console.error(
+            "Edit message error:",
+            error.message
+        );
+
+        return errorResponse(res);
+    }
+};
 
 // Delete a message
 export const deleteMessage = async (req, res) => {

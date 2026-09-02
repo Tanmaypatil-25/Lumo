@@ -2,16 +2,20 @@ import mongoose from "mongoose";
 import User from "./User.js"
 
 const messageSchema = new mongoose.Schema({
-    senderId: {type: mongoose.Schema.Types.ObjectId, ref: User, required: true},
-    receiverId: {type: mongoose.Schema.Types.ObjectId, ref: User, required: true},
-    text: {type: String},
-    image: {type: String},
-    imagePublicId: { type: String },
-    seen: {type: Boolean, default: false}
+  senderId: { type: mongoose.Schema.Types.ObjectId, ref: User, required: true },
+  receiverId: { type: mongoose.Schema.Types.ObjectId, ref: User, required: true },
+  text: { type: String },
+  image: { type: String },
+  imagePublicId: { type: String },
+  seen: { type: Boolean, default: false },
+  edited: {
+    type: Boolean,
+    default: false
+  }
 },
-{
+  {
     timestamps: true
-});
+  });
 
 // Conversation queries + pagination
 messageSchema.index({
