@@ -65,6 +65,8 @@ const ChatContainer = () => {
   const [hasSearched, setHasSearched] =
     useState(false);
 
+  const [messageToDelete, setMessageToDelete] = useState(null);
+
   const [highlightedMessageId, setHighlightedMessageId] =
     useState(null);
 
@@ -923,137 +925,767 @@ const ChatContainer = () => {
             </p>
           </div>
         ) : (
-          messages.map((msg) => (
-            <div
-              id={`message-${msg._id}`}
-              key={msg._id}
-              className={`flex items-end gap-2 justify-end rounded-2xl px-2 py-1 transition-all duration-500 ${msg.senderId !== authUser._id
-                ? "flex-row-reverse"
-                : ""
-                } ${highlightedMessageId === msg._id
-                  ? "bg-violet-500/[0.14] ring-1 ring-violet-400/25"
-                  : "bg-transparent"
-                }`}
-            >
-              {msg.image ? (
-                <img
-                  src={msg.image}
-                  className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8'
-                  alt=""
-                />
-              ) : editingMessageId === msg._id ? (
-                <div className="mb-8">
-                  <input
-                    type="text"
-                    value={editInput}
-                    onChange={(e) => setEditInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleEditMessage(msg._id);
-                      }
+          messages.map((msg, index) => {
+            const isOwnMessage =
+              msg.senderId === authUser._id;
 
-                      if (e.key === "Escape") {
-                        cancelEditing();
-                      }
-                    }}
-                    className="p-2 text-sm rounded bg-gray-700 text-white outline-none"
-                    autoFocus
-                  />
+            const previousMessage = messages[index - 1];
+            const nextMessage = messages[index + 1];
 
-                  <div className="flex gap-2 mt-1">
-                    <button
-                      type="button"
-                      onClick={() => handleEditMessage(msg._id)}
-                      className="text-xs text-green-400"
-                    >
-                      Save
-                    </button>
+            const isSameSenderAsPrevious =
+              previousMessage &&
+              previousMessage.senderId === msg.senderId;
 
-                    <button
-                      type="button"
-                      onClick={cancelEditing}
-                      className="text-xs text-gray-400"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p
-                  className={`p-2 max-w-[200px] md:text-sm font-light rounded-lg mb-8 break-all bg-violet-500/30 text-white ${msg.senderId === authUser._id
-                    ? "rounded-br-none"
-                    : "rounded-bl-none"
+            const isSameSenderAsNext =
+              nextMessage &&
+              nextMessage.senderId === msg.senderId;
+
+            const isFirstInGroup =
+              !isSameSenderAsPrevious;
+
+            const isLastInGroup =
+              !isSameSenderAsNext;
+
+            return (
+              <div
+                id={`message-${msg._id}`}
+                key={msg._id}
+                className={`group flex w-full px-1 transition-all duration-500 ${isOwnMessage
+                  ? "justify-end"
+                  : "justify-start"
+                  } ${isFirstInGroup
+                    ? "pt-3"
+                    : "pt-0.5"
+                  } ${isLastInGroup
+                    ? "pb-2"
+                    : "pb-0.5"
+                  } ${highlightedMessageId === msg._id
+                    ? "rounded-2xl bg-violet-500/[0.14] ring-1 ring-violet-400/25"
+                    : "bg-transparent"
+                  }`}
+              >
+                <div
+                  className={`flex max-w-[85%] items-end gap-2.5 md:max-w-[72%] ${isOwnMessage
+                    ? "flex-row-reverse"
+                    : "flex-row"
                     }`}
                 >
-                  {msg.text}
 
-                  {msg.edited && (
-                    <span className="ml-1 text-[10px] text-gray-400">
-                      (edited)
-                    </span>
-                  )}
-                </p>
-              )}
-
-              <div className='text-center text-xs'>
-                <img
-                  src={
-                    msg.senderId === authUser._id
-                      ? authUser?.profilePic || assets.avatar_icon
-                      : selectedUser?.profilePic || assets.avatar_icon
-                  }
-                  className='w-7 rounded-full'
-                  alt=""
-                />
-
-                <div className="text-gray-500">
-                  <p>
-                    {formatMessageTime(
-                      msg.createdAt
+                  {/* Avatar */}
+                  <div className="mb-5 w-7 shrink-0">
+                    {isLastInGroup ? (
+                      <img
+                        src={
+                          isOwnMessage
+                            ? authUser?.profilePic ||
+                            assets.avatar_icon
+                            : selectedUser?.profilePic ||
+                            assets.avatar_icon
+                        }
+                        alt=""
+                        className="h-7 w-7 rounded-full object-cover ring-1 ring-white/[0.08]"
+                      />
+                    ) : (
+                      <div className="h-7 w-7" />
                     )}
-                  </p>
+                  </div>
 
-                  {msg.senderId === authUser._id && msg.text && (
-                    <button
-                      type="button"
-                      onClick={() => startEditing(msg)}
-                      className="text-xs text-blue-400 hover:text-blue-300 mr-2"
+                  {/* Message content */}
+                  <div
+                    className={`relative flex min-w-0 flex-col ${isOwnMessage
+                      ? "items-end"
+                      : "items-start"
+                      }`}
+                  >
+
+                    {/* IMAGE MESSAGE */}
+                    {msg.image ? (
+                      <div
+                        className={`relative overflow-hidden rounded-[20px] border p-1.5 transition-all duration-200 ${isOwnMessage
+                          ? `
+    ${isFirstInGroup && isLastInGroup
+                            ? "rounded-[20px] rounded-br-[6px]"
+                            : isFirstInGroup
+                              ? "rounded-[20px] rounded-br-[10px]"
+                              : isLastInGroup
+                                ? "rounded-[20px] rounded-tr-[10px] rounded-br-[6px]"
+                                : "rounded-[20px] rounded-tr-[10px] rounded-br-[10px]"
+                          }
+    border-violet-300/[0.14]
+    bg-gradient-to-br
+    from-violet-500/[0.24]
+    via-violet-500/[0.16]
+    to-indigo-500/[0.12]
+    shadow-[0_8px_28px_rgba(76,29,149,0.14)]
+  `
+                          : `
+    ${isFirstInGroup && isLastInGroup
+                            ? "rounded-[20px] rounded-bl-[6px]"
+                            : isFirstInGroup
+                              ? "rounded-[20px] rounded-bl-[10px]"
+                              : isLastInGroup
+                                ? "rounded-[20px] rounded-tl-[10px] rounded-bl-[6px]"
+                                : "rounded-[20px] rounded-tl-[10px] rounded-bl-[10px]"
+                          }
+    border-white/[0.09]
+    bg-gradient-to-br
+    from-white/[0.075]
+    via-white/[0.055]
+    to-white/[0.035]
+    shadow-[0_8px_24px_rgba(0,0,0,0.10)]
+  `
+                          }`}
+                      >
+
+                        {/* Glass highlight */}
+                        <div
+                          className={`pointer-events-none absolute inset-x-0 top-0 z-10 h-px ${isOwnMessage
+                            ? "bg-gradient-to-r from-transparent via-violet-200/30 to-transparent"
+                            : "bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                            }`}
+                        />
+
+                        {/* Image */}
+                        <div className="overflow-hidden rounded-[15px]">
+                          <img
+                            src={msg.image}
+                            alt="Shared media"
+                            className="
+          block
+          max-h-[380px]
+          w-full
+          max-w-[320px]
+          object-cover
+          transition-transform
+          duration-300
+          hover:scale-[1.015]
+        "
+                          />
+                        </div>
+
+                        {/* EDIT IMAGE CAPTION */}
+                        {editingMessageId === msg._id ? (
+                          <div className="px-2 pb-2 pt-2.5">
+
+                            <input
+                              type="text"
+                              value={editInput}
+                              onChange={(e) =>
+                                setEditInput(e.target.value)
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleEditMessage(msg._id);
+                                }
+
+                                if (e.key === "Escape") {
+                                  cancelEditing();
+                                }
+                              }}
+                              placeholder="Edit caption"
+                              className="
+            w-full
+            rounded-xl
+            border
+            border-white/[0.10]
+            bg-black/20
+            px-3
+            py-2
+            text-sm
+            text-white
+            outline-none
+            transition
+            placeholder:text-zinc-500
+            focus:border-violet-400/30
+            focus:bg-black/25
+          "
+                              autoFocus
+                            />
+
+                            <div className="mt-2 flex justify-end gap-3 px-1">
+
+                              <button
+                                type="button"
+                                onClick={cancelEditing}
+                                className="text-xs text-zinc-400 transition hover:text-white"
+                              >
+                                Cancel
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleEditMessage(msg._id)
+                                }
+                                className="text-xs font-medium text-violet-300 transition hover:text-violet-200"
+                              >
+                                Save
+                              </button>
+
+                            </div>
+                          </div>
+                        ) : (
+                          msg.text && (
+                            <p
+                              className={`max-w-[320px] whitespace-pre-wrap break-words px-2.5 pb-2 pt-2.5 text-[14px] leading-[1.5] ${isOwnMessage
+                                ? "text-zinc-50"
+                                : "text-zinc-200"
+                                }`}
+                            >
+                              {msg.text}
+                            </p>
+                          )
+                        )}
+
+                      </div>
+
+                    ) : editingMessageId === msg._id ? (
+
+                      /* NORMAL TEXT EDITING */
+                      <div className="min-w-[220px] rounded-2xl border border-white/[0.08] bg-white/[0.05] p-2">
+
+                        <input
+                          type="text"
+                          value={editInput}
+                          onChange={(e) =>
+                            setEditInput(e.target.value)
+                          }
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleEditMessage(msg._id);
+                            }
+
+                            if (e.key === "Escape") {
+                              cancelEditing();
+                            }
+                          }}
+                          className="w-full rounded-xl border border-white/[0.08] bg-black/20 px-3 py-2 text-sm text-white outline-none focus:border-white/[0.14]"
+                          autoFocus
+                        />
+
+                        <div className="mt-2 flex justify-end gap-3 px-1">
+
+                          <button
+                            type="button"
+                            onClick={cancelEditing}
+                            className="text-xs text-zinc-400 transition hover:text-white"
+                          >
+                            Cancel
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleEditMessage(msg._id)
+                            }
+                            className="text-xs font-medium text-violet-300 transition hover:text-violet-200"
+                          >
+                            Save
+                          </button>
+
+                        </div>
+                      </div>
+
+                    ) : (
+
+                      /* NORMAL TEXT MESSAGE */
+                      <div
+                        className={`relative max-w-full overflow-hidden rounded-[20px] px-4 py-2.5 text-[14px] leading-[1.5] transition-all duration-200 ${isOwnMessage
+                          ? `
+    ${isFirstInGroup && isLastInGroup
+                            ? "rounded-[20px] rounded-br-[6px]"
+                            : isFirstInGroup
+                              ? "rounded-[20px] rounded-br-[10px]"
+                              : isLastInGroup
+                                ? "rounded-[20px] rounded-tr-[10px] rounded-br-[6px]"
+                                : "rounded-[20px] rounded-tr-[10px] rounded-br-[10px]"
+                          }
+    border border-violet-300/[0.14]
+    bg-gradient-to-br
+    from-violet-500/[0.28]
+    via-violet-500/[0.20]
+    to-indigo-500/[0.16]
+    text-zinc-50
+    shadow-[0_8px_28px_rgba(76,29,149,0.14)]
+  `
+                          : `
+    ${isFirstInGroup && isLastInGroup
+                            ? "rounded-[20px] rounded-bl-[6px]"
+                            : isFirstInGroup
+                              ? "rounded-[20px] rounded-bl-[10px]"
+                              : isLastInGroup
+                                ? "rounded-[20px] rounded-tl-[10px] rounded-bl-[6px]"
+                                : "rounded-[20px] rounded-tl-[10px] rounded-bl-[10px]"
+                          }
+    border border-white/[0.09]
+    bg-gradient-to-br
+    from-white/[0.075]
+    via-white/[0.055]
+    to-white/[0.035]
+    text-zinc-200
+    shadow-[0_8px_24px_rgba(0,0,0,0.10)]
+  `
+                          }`}
+                      >
+
+                        <div
+                          className={`pointer-events-none absolute inset-x-0 top-0 h-px ${isOwnMessage
+                            ? "bg-gradient-to-r from-transparent via-violet-200/25 to-transparent"
+                            : "bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                            }`}
+                        />
+
+                        <p className="relative whitespace-pre-wrap break-words">
+                          {msg.text}
+                        </p>
+
+                      </div>
+                    )}
+
+                    {/* MESSAGE META */}
+                    <div
+                      className={`mt-1 flex min-h-[16px] items-center gap-1.5 px-1 text-[10px] font-medium tracking-[0.01em] text-zinc-500 ${isOwnMessage
+                        ? "justify-end"
+                        : "justify-start"
+                        }`}
                     >
-                      Edit
-                    </button>
-                  )}
+                      <span>
+                        {formatMessageTime(
+                          msg.createdAt
+                        )}
+                      </span>
 
-                  {msg.senderId === authUser._id && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleDeleteMessage(
-                          msg._id
-                        )
-                      }
-                      className="text-xs text-red-400 hover:text-red-300"
-                    >
-                      Delete
-                    </button>
-                  )}
+                      {msg.edited && (
+                        <>
+                          <span>•</span>
+                          <span>Edited</span>
+                        </>
+                      )}
 
-                  {msg.senderId === authUser._id && (
-                    <p className="text-[10px] mt-1">
-                      {msg.seen
-                        ? "Seen"
-                        : "Sent"}
-                    </p>
-                  )}
+                      {isOwnMessage && (
+                        <>
+                          <span>•</span>
+
+                          {msg.seen ? (
+                            <span className="flex items-center gap-1 text-violet-300/80">
+                              <svg
+                                viewBox="0 0 20 20"
+                                fill="none"
+                                className="h-3.5 w-3.5"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  d="M2.5 10.5L6 14L12.5 7.5"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+
+                                <path
+                                  d="M8 13.5L9.5 15L17 7.5"
+                                  stroke="currentColor"
+                                  strokeWidth="1.5"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+
+                              Seen
+                            </span>
+                          ) : (
+                            <span className="text-zinc-500">
+                              Sent
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+
+                    {/* MESSAGE ACTIONS */}
+                    {isOwnMessage && (
+                      <div
+                        className="
+      pointer-events-none
+      absolute
+      right-full
+      top-1/2
+      z-20
+      mr-2
+      -translate-y-1/2
+      opacity-0
+      transition-all
+      duration-200
+      group-hover:pointer-events-auto
+      group-hover:opacity-100
+    "
+                      >
+                        <div
+                          className="
+        flex
+        items-center
+        gap-0.5
+        rounded-xl
+        border
+        border-white/[0.08]
+        bg-[#17171D]/95
+        p-1
+        shadow-[0_8px_30px_rgba(0,0,0,0.28)]
+        backdrop-blur-xl
+      "
+                        >
+
+                          {/* EDIT */}
+                          {msg.text && (
+                            <button
+                              type="button"
+                              onClick={() => startEditing(msg)}
+                              className="
+            lumo-interactive
+            flex
+            h-8
+            w-8
+            items-center
+            justify-center
+            rounded-lg
+            text-zinc-400
+            transition
+            hover:bg-white/[0.07]
+            hover:text-zinc-100
+            active:scale-95
+          "
+                              aria-label="Edit message"
+                              title="Edit message"
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                className="h-[16px] w-[16px]"
+                                aria-hidden="true"
+                              >
+                                <path
+                                  d="M13.5 6.5L17.5 10.5"
+                                  stroke="currentColor"
+                                  strokeWidth="1.7"
+                                  strokeLinecap="round"
+                                />
+
+                                <path
+                                  d="M4.5 19.5L8.3 18.7L18.2 8.8C19 8 19 6.8 18.2 6L18 5.8C17.2 5 16 5 15.2 5.8L5.3 15.7L4.5 19.5Z"
+                                  stroke="currentColor"
+                                  strokeWidth="1.7"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                            </button>
+                          )}
+
+                          {/* DELETE */}
+                          <button
+                            type="button"
+                            onClick={() => setMessageToDelete(msg)}
+                            className="
+          lumo-interactive
+          flex
+          h-8
+          w-8
+          items-center
+          justify-center
+          rounded-lg
+          text-zinc-400
+          transition
+          hover:bg-red-500/[0.08]
+          hover:text-red-300
+          active:scale-95
+        "
+                            aria-label="Delete message"
+                            title="Delete message"
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              className="h-[16px] w-[16px]"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M8 8V18"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                              />
+
+                              <path
+                                d="M12 8V18"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                              />
+
+                              <path
+                                d="M16 8V18"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                              />
+
+                              <path
+                                d="M5 6H19"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                              />
+
+                              <path
+                                d="M9 6L10 4H14L15 6"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+
+                              <path
+                                d="M7 6L8 20H16L17 6"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
                 </div>
               </div>
-
-            </div>
-          ))
+            );
+          })
         )}
 
         <div ref={scrollEnd}></div>
 
       </div>
+
+      {/* DELETE MESSAGE CONFIRMATION */}
+      {messageToDelete && (
+        <div
+          className="
+      absolute
+      inset-0
+      z-50
+      flex
+      items-center
+      justify-center
+      bg-black/45
+      px-4
+      backdrop-blur-[3px]
+    "
+          onMouseDown={() =>
+            setMessageToDelete(null)
+          }
+        >
+          <div
+            className="
+        w-full
+        max-w-[360px]
+        rounded-[22px]
+        border
+        border-white/[0.09]
+        bg-[#18181E]/95
+        p-5
+        shadow-[0_24px_80px_rgba(0,0,0,0.45)]
+        backdrop-blur-2xl
+      "
+            onMouseDown={(e) =>
+              e.stopPropagation()
+            }
+          >
+
+            {/* Icon */}
+            <div
+              className="
+          mb-4
+          flex
+          h-11
+          w-11
+          items-center
+          justify-center
+          rounded-2xl
+          bg-red-500/[0.10]
+          text-red-300
+        "
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-5 w-5"
+                aria-hidden="true"
+              >
+                <path
+                  d="M5 6H19"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                />
+
+                <path
+                  d="M9 6L10 4H14L15 6"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                <path
+                  d="M7 6L8 20H16L17 6"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                <path
+                  d="M10 10V16"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                />
+
+                <path
+                  d="M14 10V16"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+
+            <h3 className="text-[16px] font-semibold text-zinc-100">
+              Delete message?
+            </h3>
+
+            <p className="mt-1.5 text-[13px] leading-5 text-zinc-400">
+              This message will be permanently deleted
+              for everyone in this conversation.
+            </p>
+
+            {/* Preview */}
+            {(messageToDelete.text ||
+              messageToDelete.image) && (
+                <div
+                  className="
+            mt-4
+            max-h-[90px]
+            overflow-hidden
+            rounded-xl
+            border
+            border-white/[0.06]
+            bg-white/[0.035]
+            px-3
+            py-2.5
+          "
+                >
+                  {messageToDelete.image && (
+                    <div className="mb-1.5 flex items-center gap-2 text-xs text-zinc-400">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        className="h-4 w-4"
+                        aria-hidden="true"
+                      >
+                        <rect
+                          x="3"
+                          y="4"
+                          width="18"
+                          height="16"
+                          rx="3"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                        />
+
+                        <path
+                          d="M3 16L8 11L12 15L15 12L21 18"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+
+                      Image
+                    </div>
+                  )}
+
+                  {messageToDelete.text && (
+                    <p className="truncate text-[13px] text-zinc-300">
+                      {messageToDelete.text}
+                    </p>
+                  )}
+                </div>
+              )}
+
+            {/* Actions */}
+            <div className="mt-5 flex justify-end gap-2">
+
+              <button
+                type="button"
+                onClick={() =>
+                  setMessageToDelete(null)
+                }
+                className="
+            lumo-interactive
+            rounded-xl
+            px-4
+            py-2
+            text-sm
+            font-medium
+            text-zinc-300
+            transition
+            hover:bg-white/[0.06]
+            hover:text-white
+          "
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  const messageId =
+                    messageToDelete._id;
+
+                  setMessageToDelete(null);
+
+                  await handleDeleteMessage(
+                    messageId
+                  );
+                }}
+                className="
+            lumo-interactive
+            rounded-xl
+            bg-red-500/[0.12]
+            px-4
+            py-2
+            text-sm
+            font-medium
+            text-red-300
+            transition
+            hover:bg-red-500/[0.18]
+            hover:text-red-200
+            active:scale-[0.98]
+          "
+              >
+                Delete
+              </button>
+
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ------- bottom search area ------- */}
       <div className='absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3'>
