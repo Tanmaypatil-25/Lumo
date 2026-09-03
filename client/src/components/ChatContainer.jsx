@@ -43,6 +43,7 @@ const ChatContainer = () => {
 
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
+  const [image, setImage] = useState(null);
 
   const [editingMessageId, setEditingMessageId] =
     useState(null);
@@ -66,6 +67,8 @@ const ChatContainer = () => {
     useState(false);
 
   const [messageToDelete, setMessageToDelete] = useState(null);
+
+  const [imagePreview, setImagePreview] = useState("");
 
   const [highlightedMessageId, setHighlightedMessageId] =
     useState(null);
@@ -234,28 +237,42 @@ const ChatContainer = () => {
   };
 
   // Handle sending a message
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-
+  const handleSendMessage = async () => {
     const cleanText = input.trim();
 
-    if (!cleanText || sending) return;
+    if ((!cleanText && !image) || sending) {
+      return;
+    }
 
     try {
       setSending(true);
 
       const formData = new FormData();
-      formData.append("text", cleanText);
 
-      const success = await sendMessage(formData);
+      if (cleanText) {
+        formData.append("text", cleanText);
+      }
+
+      if (image) {
+        formData.append("image", image);
+      }
+
+      const success =
+        await sendMessage(formData);
 
       if (success) {
         setInput("");
+        setImage(null);
 
         socket?.emit(
           "stopTyping",
           selectedUser._id
         );
+
+        if (messageInputRef.current) {
+          messageInputRef.current.style.height =
+            "auto";
+        }
 
         requestAnimationFrame(() => {
           messageInputRef.current?.focus();
@@ -298,53 +315,71 @@ const ChatContainer = () => {
     }
   };
 
-  // Handle sending an image
-  const handleSendImage = async (e) => {
+  const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
 
-    if (!file || sending) return;
+    // Allow selecting the same image again later
+    e.target.value = "";
+
+    if (!file) {
+      return;
+    }
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      toast.error("Only JPEG, PNG and WebP images are allowed");
-      e.target.value = "";
+      toast.error(
+        "Only JPEG, PNG and WebP images are allowed"
+      );
       return;
     }
 
     if (file.size > MAX_IMAGE_SIZE) {
-      toast.error("Image must be smaller than 2 MB");
-      e.target.value = "";
+      toast.error(
+        "Image must be smaller than 2 MB"
+      );
       return;
     }
 
-    try {
-      setSending(true);
+    setImage(file);
+  };
 
-      const formData = new FormData();
+  const handlePaste = (e) => {
+    const items = Array.from(
+      e.clipboardData?.items || []
+    );
 
-      if (input.trim()) {
-        formData.append("text", input.trim());
-      }
+    const imageItem = items.find(
+      (item) =>
+        item.kind === "file" &&
+        item.type.startsWith("image/")
+    );
 
-      formData.append("image", file);
-
-      const success = await sendMessage(formData);
-
-      if (success) {
-        setInput("");
-        e.target.value = "";
-
-        socket?.emit(
-          "stopTyping",
-          selectedUser._id
-        );
-
-        requestAnimationFrame(() => {
-          messageInputRef.current?.focus();
-        });
-      }
-    } finally {
-      setSending(false);
+    if (!imageItem) {
+      return;
     }
+
+    const file = imageItem.getAsFile();
+
+    if (!file) {
+      return;
+    }
+
+    e.preventDefault();
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error(
+        "Only JPEG, PNG and WebP images are allowed"
+      );
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error(
+        "Image must be smaller than 2 MB"
+      );
+      return;
+    }
+
+    setImage(file);
   };
 
   const retryMessages = () => {
@@ -409,6 +444,22 @@ const ChatContainer = () => {
     getMessages,
     socket
   ]);
+
+  useEffect(() => {
+    if (!image) {
+      setImagePreview("");
+      return;
+    }
+
+    const previewUrl =
+      URL.createObjectURL(image);
+
+    setImagePreview(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [image]);
 
   useEffect(() => {
     if (!searchOpen || !selectedUser) {
@@ -1687,31 +1738,319 @@ const ChatContainer = () => {
         </div>
       )}
 
-      {/* ------- bottom search area ------- */}
-      <div className='absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3'>
-        <div className='flex-1 flex items-center bg-gray-100/12 px-3 rounded-full'>
-          <input ref={messageInputRef} onChange={handleInputChange} value={input} disabled={sending} onKeyDown={(e) => e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a message' className='flex-1 text-sm p-3 border-none rounded-lg outline-none text-white placeholder-gray-400' />
-          <input
-            onChange={handleSendImage}
-            type="file"
-            id="image"
-            accept="image/jpeg,image/png,image/webp"
-            disabled={sending}
-            hidden
-          />
-          <label htmlFor="image">
-            <img src={assets.gallery_icon} alt="" className='w-5 mr-2 cursor-pointer' />
-          </label>
+      {/* MESSAGE COMPOSER */}
+      <div
+        className="
+    relative
+    z-20
+    shrink-0
+    border-t
+    border-white/[0.06]
+    bg-[#0f0f14]/80
+    px-4
+    py-3
+    backdrop-blur-2xl
+    md:px-5
+  "
+      >
+
+        {/* IMAGE PREVIEW */}
+        {image && (
+          <div
+            className="
+        mb-3
+        flex
+        items-center
+        gap-3
+        rounded-2xl
+        border
+        border-white/[0.08]
+        bg-white/[0.035]
+        p-2
+      "
+          >
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-white/[0.08]">
+              <img
+                src={imagePreview}
+                alt="Selected attachment"
+                className="h-full w-full object-cover"
+              />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-zinc-200">
+                Image selected
+              </p>
+
+              <p className="mt-0.5 text-xs text-zinc-500">
+                Add a caption or send directly
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setImage(null)}
+              className="
+          lumo-interactive
+          flex
+          h-9
+          w-9
+          shrink-0
+          items-center
+          justify-center
+          rounded-xl
+          text-zinc-500
+          transition
+          hover:bg-white/[0.06]
+          hover:text-zinc-200
+          active:scale-95
+        "
+              aria-label="Remove image"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-[18px] w-[18px]"
+                aria-hidden="true"
+              >
+                <path
+                  d="M6 6L18 18"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+
+                <path
+                  d="M18 6L6 18"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-end gap-2.5">
+
+          {/* MAIN INPUT SURFACE */}
+          <div
+            className="
+        flex
+        min-w-0
+        flex-1
+        items-end
+        rounded-[22px]
+        border
+        border-white/[0.08]
+        bg-white/[0.045]
+        px-2
+        py-2
+        shadow-[0_10px_35px_rgba(0,0,0,0.12)]
+        transition
+        focus-within:border-violet-400/[0.18]
+        focus-within:bg-white/[0.055]
+      "
+          >
+
+            {/* ATTACH IMAGE */}
+            <input
+              type="file"
+              id="message-image"
+              accept="image/jpeg,image/png,image/webp"
+              hidden
+              onChange={handleImageSelect}
+            />
+
+            <label
+              htmlFor={sending ? undefined : "message-image"}
+              className={`
+  lumo-interactive
+  flex
+  h-10
+  w-10
+  shrink-0
+  items-center
+  justify-center
+  rounded-xl
+  text-zinc-500
+  transition
+  hover:bg-white/[0.06]
+  hover:text-zinc-200
+  active:scale-95
+  ${sending
+                  ? "pointer-events-none cursor-not-allowed opacity-40"
+                  : "cursor-pointer"
+                }
+`}
+              aria-label="Attach image"
+              title="Attach image"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-[20px] w-[20px]"
+                aria-hidden="true"
+              >
+                <rect
+                  x="3"
+                  y="4"
+                  width="18"
+                  height="16"
+                  rx="3"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                />
+
+                <circle
+                  cx="8.5"
+                  cy="9"
+                  r="1.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
+
+                <path
+                  d="M3.5 17L8.5 12L12.5 16L15.5 13L20.5 18"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </label>
+
+            {/* MESSAGE INPUT */}
+            <textarea
+              ref={messageInputRef}
+              rows={1}
+              value={input}
+              onPaste={handlePaste}
+              onChange={(e) => {
+                handleInputChange(e);
+
+                e.target.style.height = "auto";
+                e.target.style.height = `${Math.min(
+                  e.target.scrollHeight,
+                  120
+                )}px`;
+              }}
+              onKeyDown={(e) => {
+                if (
+                  e.key === "Enter" &&
+                  !e.shiftKey
+                ) {
+                  e.preventDefault();
+
+                  if (!sending) {
+                    handleSendMessage();
+                  }
+                }
+              }}
+              placeholder="Message..."
+              disabled={sending}
+              className="max-h-[120px] min-h-[40px] min-w-0 flex-1 resize-none bg-transparent px-2 py-2.5
+                          text-[14px]
+                          leading-5
+                          text-zinc-100
+                          outline-none
+                          placeholder:text-zinc-600
+                          disabled:cursor-not-allowed
+                          disabled:opacity-60"
+            />
+
+          </div>
+
+          {/* SEND BUTTON */}
+          <button
+            type="button"
+            onClick={handleSendMessage}
+            disabled={
+              sending ||
+              (!input.trim() && !image)
+            }
+            className="
+        lumo-interactive
+        flex
+        h-11
+        w-11
+        shrink-0
+        items-center
+        justify-center
+        rounded-[15px]
+        border
+        border-violet-300/[0.12]
+        bg-gradient-to-br
+        from-violet-500
+        to-indigo-500
+        text-white
+        shadow-[0_8px_28px_rgba(109,40,217,0.22)]
+        transition
+        hover:brightness-110
+        active:scale-95
+        disabled:cursor-not-allowed
+        disabled:border-white/[0.05]
+        disabled:bg-none
+        disabled:bg-white/[0.05]
+        disabled:text-zinc-600
+        disabled:shadow-none
+      "
+            aria-label="Send message"
+          >
+            {sending ? (
+              <svg
+                viewBox="0 0 24 24"
+                className="h-[19px] w-[19px] animate-spin"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="8"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="opacity-20"
+                />
+
+                <path
+                  d="M20 12A8 8 0 0 0 12 4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            ) : (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-[19px] w-[19px]"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 5L20 12L4 19L7 12L4 5Z"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinejoin="round"
+                />
+
+                <path
+                  d="M7 12H20"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
+          </button>
+
         </div>
-        <img
-          onClick={sending ? undefined : handleSendMessage}
-          src={assets.send_button}
-          alt="Send"
-          className={`w-7 ${sending
-            ? "opacity-50 cursor-not-allowed"
-            : "cursor-pointer"
-            }`}
-        />
+
+        <div className="mt-1.5 px-2">
+          <p className="text-[10px] text-zinc-600">
+            Enter to send • Shift + Enter for a new line
+          </p>
+        </div>
       </div>
 
     </div>
