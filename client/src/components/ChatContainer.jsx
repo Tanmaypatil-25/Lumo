@@ -38,6 +38,8 @@ const ChatContainer = () => {
   const typingTimeoutRef = useRef(null);
   const initialScrollDoneRef = useRef(false);
   const messageInputRef = useRef(null);
+  const searchPanelRef = useRef(null);
+  const searchButtonRef = useRef(null);
 
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -58,6 +60,18 @@ const ChatContainer = () => {
     useState([]);
 
   const [searching, setSearching] =
+    useState(false);
+
+  const [hasSearched, setHasSearched] =
+    useState(false);
+
+  const [highlightedMessageId, setHighlightedMessageId] =
+    useState(null);
+
+  const [pendingMessageId, setPendingMessageId] =
+    useState(null);
+
+  const [navigatingToMessage, setNavigatingToMessage] =
     useState(false);
 
   const handleDeleteMessage = async (
@@ -89,41 +103,66 @@ const ChatContainer = () => {
     setEditInput("");
   };
 
-  const handleSearchMessages = async (e) => {
-    e?.preventDefault();
-
-    const cleanQuery =
-      searchQuery.trim();
-
-    if (!cleanQuery) {
-      setSearchResults([]);
-      return;
-    }
-
-    if (!selectedUser) {
-      return;
-    }
-
-    try {
-      setSearching(true);
-
-      const results =
-        await searchMessages(
-          selectedUser._id,
-          cleanQuery
-        );
-
-      setSearchResults(results);
-
-    } finally {
-      setSearching(false);
-    }
-  };
-
   const closeSearch = () => {
     setSearchOpen(false);
     setSearchQuery("");
     setSearchResults([]);
+    setHasSearched(false);
+  };
+
+  const handleSearchResultClick = async (
+    messageId
+  ) => {
+    if (navigatingToMessage) {
+      return;
+    }
+
+    const alreadyLoaded =
+      messages.some(
+        (message) =>
+          message._id === messageId
+      );
+
+    if (alreadyLoaded) {
+      setPendingMessageId(messageId);
+      return;
+    }
+
+    try {
+      setNavigatingToMessage(true);
+
+      let canLoadMore = hasMoreMessages;
+      let found = false;
+
+      while (canLoadMore && !found) {
+
+        const page =
+          await loadOlderMessages();
+
+        if (!page) {
+          break;
+        }
+
+        found =
+          page.messages.some(
+            (message) =>
+              message._id === messageId
+          );
+
+        canLoadMore = page.hasMore;
+      }
+
+      if (found) {
+        setPendingMessageId(messageId);
+      } else {
+        toast.error(
+          "Couldn't locate this message"
+        );
+      }
+
+    } finally {
+      setNavigatingToMessage(false);
+    }
   };
 
   const handleEditMessage = async (
@@ -370,6 +409,152 @@ const ChatContainer = () => {
   ]);
 
   useEffect(() => {
+    if (!searchOpen || !selectedUser) {
+      return;
+    }
+
+    const cleanQuery = searchQuery.trim();
+
+    if (!cleanQuery) {
+      setSearchResults([]);
+      setSearching(false);
+      setHasSearched(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    setSearching(true);
+    setHasSearched(false);
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        const results = await searchMessages(
+          selectedUser._id,
+          cleanQuery
+        );
+
+        if (!cancelled) {
+          setSearchResults(
+            Array.isArray(results) ? results : []
+          );
+          setHasSearched(true);
+        }
+      } catch {
+        if (!cancelled) {
+          setSearchResults([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setSearching(false);
+        }
+      }
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [
+    searchQuery,
+    searchOpen,
+    selectedUser?._id,
+    searchMessages
+  ]);
+
+  useEffect(() => {
+    if (!pendingMessageId) {
+      return;
+    }
+
+    const messageExists =
+      messages.some(
+        (message) =>
+          message._id === pendingMessageId
+      );
+
+    if (!messageExists) {
+      return;
+    }
+
+    const messageId = pendingMessageId;
+
+    // Close search
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    setHasSearched(false);
+
+    // Highlight target
+    setHighlightedMessageId(messageId);
+
+    // Clear pending navigation
+    setPendingMessageId(null);
+
+    // Wait until React has rendered the message
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const messageElement =
+          document.getElementById(
+            `message-${messageId}`
+          );
+
+        messageElement?.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      });
+    });
+
+    // Remove highlight after 2 seconds
+    setTimeout(() => {
+      setHighlightedMessageId(
+        (currentId) =>
+          currentId === messageId
+            ? null
+            : currentId
+      );
+    }, 2000);
+
+  }, [
+    pendingMessageId,
+    messages
+  ]);
+
+  useEffect(() => {
+    if (!searchOpen) {
+      return;
+    }
+
+    const handleClickOutsideSearch = (event) => {
+      const clickedInsidePanel =
+        searchPanelRef.current?.contains(event.target);
+
+      const clickedSearchButton =
+        searchButtonRef.current?.contains(event.target);
+
+      if (
+        !clickedInsidePanel &&
+        !clickedSearchButton
+      ) {
+        closeSearch();
+      }
+    };
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutsideSearch
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutsideSearch
+      );
+    };
+  }, [searchOpen]);
+
+  useEffect(() => {
     if (
       scrollEnd.current &&
       messages.length > 0 &&
@@ -388,144 +573,319 @@ const ChatContainer = () => {
   }, [messages.length, loadingOlderMessages]);
 
   return selectedUser ? (
-    <div className='h-full overflow-scroll relative backdrop-blur-lg'>
-      {/* ------- header -------- */}
-      <div className='flex items-center gap-3 py-3 mx-4 border-b border-stone-500'>
-        <img src={selectedUser.profilePic || assets.avatar_icon} alt="" className='w-8 rounded-full' />
-        <div className="flex-1">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-white/[0.012]">
+      {/* ================= CHAT HEADER ================= */}
 
-          <p className="text-lg text-white flex items-center gap-2">
-            {selectedUser.fullName}
+      <header className="relative z-20 flex h-[76px] shrink-0 items-center gap-3 border-b border-white/[0.07] bg-white/[0.018] px-5 backdrop-blur-xl">
 
-            {onlineUsers.includes(
-              selectedUser._id
-            ) && (
-                <span className="w-2 h-2 rounded-full bg-green-500" />
-              )}
-          </p>
-
-          {typingUserId === selectedUser._id && (
-            <p className="text-xs text-gray-400">
-              typing...
-            </p>
-          )}
-
-        </div>
+        {/* Mobile back button */}
         <button
           type="button"
-          onClick={() =>
-            setSearchOpen(
-              (current) => !current
-            )
-          }
-          className="text-sm text-gray-300 hover:text-white"
+          onClick={() => setSelectedUser(null)}
+          className="lumo-interactive mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-300 hover:bg-white/[0.07] hover:text-white active:scale-95 md:hidden"
+          aria-label="Back to conversations"
         >
-          Search
-        </button>
-        <img onClick={() => setSelectedUser(null)} src={assets.arrow_icon} alt="" className='md:hidden max-w-7' />
-        <img src={assets.help_icon} alt="" className='max-md:hidden max-w-5' />
-      </div>
-
-      {searchOpen && (
-        <div className="mx-4 mt-2 relative">
-
-          <form
-            onSubmit={
-              handleSearchMessages
-            }
-            className="flex gap-2"
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="h-[21px] w-[21px]"
+            aria-hidden="true"
           >
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) =>
-                setSearchQuery(
-                  e.target.value
-                )
-              }
-              placeholder="Search messages..."
-              className="flex-1 p-2 rounded bg-gray-800 text-white outline-none text-sm"
-              autoFocus
+            <path
+              d="M15 18L9 12L15 6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
+          </svg>
+        </button>
 
-            <button
-              type="submit"
-              disabled={searching}
-              className="px-3 text-sm text-violet-300"
+        {/* User avatar */}
+        <div className="relative shrink-0">
+          <img
+            src={
+              selectedUser.profilePic ||
+              assets.avatar_icon
+            }
+            alt={selectedUser.fullName}
+            className="h-11 w-11 rounded-full object-cover ring-1 ring-white/[0.10]"
+          />
+
+          {onlineUsers.includes(selectedUser._id) && (
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#111116] bg-[var(--lumo-success)]" />
+          )}
+        </div>
+
+        {/* User information */}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-[var(--lumo-text-primary)]">
+            {selectedUser.fullName}
+          </p>
+
+          <div className="mt-0.5 flex h-4 items-center">
+            {typingUserId === selectedUser._id ? (
+              <span className="text-xs font-medium text-violet-300">
+                typing...
+              </span>
+            ) : (
+              <span
+                className={`text-xs ${onlineUsers.includes(selectedUser._id)
+                  ? "text-green-400"
+                  : "text-[var(--lumo-text-muted)]"
+                  }`}
+              >
+                {onlineUsers.includes(selectedUser._id)
+                  ? "Online"
+                  : "Offline"}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Header actions */}
+        <div className="flex shrink-0 items-center gap-1">
+
+          <button
+            type="button"
+            ref={searchButtonRef}
+            onClick={() =>
+              setSearchOpen((current) => !current)
+            }
+            className={`lumo-interactive flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 ${searchOpen
+              ? "border-violet-400/20 bg-violet-500/[0.12]"
+              : "border-transparent hover:border-white/[0.07] hover:bg-white/[0.05]"
+              }`}
+            aria-label="Search messages"
+            aria-expanded={searchOpen}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-[18px] w-[18px] text-zinc-300"
+              aria-hidden="true"
             >
-              {searching
-                ? "..."
-                : "Search"}
-            </button>
+              <path
+                d="M21 21L16.65 16.65M19 11A8 8 0 1 1 3 11A8 8 0 0 1 19 11Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
 
+          <button
+            type="button"
+            className="lumo-interactive hidden h-10 w-10 items-center justify-center rounded-xl border border-transparent hover:border-white/[0.07] hover:bg-white/[0.05] md:flex"
+            aria-label="Conversation information"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              className="h-[19px] w-[19px] text-zinc-300"
+              aria-hidden="true"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="9"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              />
+
+              <path
+                d="M12 11V16"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+
+              <circle
+                cx="12"
+                cy="8"
+                r="1"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+
+        </div>
+      </header>
+
+      {/* Search utility */}
+      {searchOpen && (
+        <section
+          ref={searchPanelRef}
+          className="relative z-10 shrink-0 border-b border-white/[0.06] bg-white/[0.018] px-4 py-3 backdrop-blur-xl md:px-5"
+        >
+
+          {/* 1. SEARCH INPUT ROW */}
+          <div className="flex items-center gap-2">
+
+            <div className="flex h-11 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.04] pl-4 pr-2 transition-all duration-200 focus-within:border-white/[0.12] focus-within:bg-white/[0.06]">
+
+              {/* Search icon */}
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-[17px] w-[17px] shrink-0 text-zinc-500"
+                aria-hidden="true"
+              >
+                <path
+                  d="M21 21L16.65 16.65M19 11A8 8 0 1 1 3 11A8 8 0 0 1 19 11Z"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => {
+                  setSearchQuery(event.target.value);
+                }}
+                placeholder="Search in conversation"
+                className="min-w-0 flex-1 bg-transparent text-sm text-[var(--lumo-text-primary)] outline-none placeholder:text-[var(--lumo-text-muted)]"
+                autoFocus
+              />
+
+              {/* Clear input */}
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchResults([]);
+                  }}
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-zinc-400 transition hover:bg-white/[0.08] hover:text-white"
+                  aria-label="Clear search"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M7 7L17 17M17 7L7 17"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            {/* Close entire search */}
             <button
               type="button"
               onClick={closeSearch}
-              className="px-2 text-gray-400"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-zinc-400 transition hover:bg-white/[0.06] hover:text-white active:scale-95"
+              aria-label="Close search"
             >
-              ✕
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-[19px] w-[19px]"
+                aria-hidden="true"
+              >
+                <path
+                  d="M7 7L17 17M17 7L7 17"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
-          </form>
 
-          {searchQuery &&
-            !searching &&
-            searchResults.length === 0 && (
-              <p className="text-xs text-gray-500 mt-2">
-                No matching messages
+          </div>
+
+          {/* 2. SEARCHING STATE — ADD IT HERE */}
+          {searching && searchQuery.trim() && (
+            <div className="flex items-center gap-2 px-1 pt-3">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                className="h-3.5 w-3.5 animate-spin text-zinc-500"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="9"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="opacity-20"
+                />
+
+                <path
+                  d="M21 12A9 9 0 0 0 12 3"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              <p className="text-xs text-[var(--lumo-text-muted)]">
+                Searching...
               </p>
-            )}
-
-          {searchResults.length > 0 && (
-            <div className="mt-2 max-h-52 overflow-y-auto bg-gray-900 rounded p-2">
-
-              <p className="text-xs text-gray-500 mb-2">
-                {searchResults.length} result
-                {searchResults.length !== 1
-                  ? "s"
-                  : ""}
-              </p>
-
-              {searchResults.map(
-                (message) => (
-                  <div
-                    key={
-                      message._id
-                    }
-                    className="border-b border-gray-800 py-2 last:border-none"
-                  >
-                    <p className="text-sm text-white">
-                      {
-                        message.text
-                      }
-                    </p>
-
-                    <p className="text-[10px] text-gray-500 mt-1">
-                      {message.senderId ===
-                        authUser._id
-                        ? "You"
-                        : selectedUser.fullName}
-
-                      {" • "}
-
-                      {formatMessageTime(
-                        message.createdAt
-                      )}
-                    </p>
-                  </div>
-                )
-              )}
-
             </div>
           )}
 
-        </div>
+          {/* 3. NO RESULTS STATE */}
+          {searchQuery.trim() &&
+            hasSearched &&
+            !searching &&
+            searchResults.length === 0 && (
+              <div className="px-1 pt-3">
+                <p className="text-xs text-[var(--lumo-text-muted)]">
+                  No matching messages
+                </p>
+              </div>
+            )}
+
+          {/* 4. SEARCH RESULTS */}
+          {searchResults.map((message) => (
+            <button
+              key={message._id}
+              type="button"
+              onClick={() =>
+                handleSearchResultClick(
+                  message._id
+                )
+              }
+              disabled={navigatingToMessage}
+              className="block w-full rounded-xl px-3 py-2.5 text-left transition-colors duration-200 hover:bg-white/[0.045] disabled:cursor-wait disabled:opacity-60"
+            >
+              <p className="break-words text-sm leading-5 text-[var(--lumo-text-primary)]">
+                {message.text}
+              </p>
+
+              <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-[var(--lumo-text-muted)]">
+                <span>
+                  {message.senderId === authUser._id
+                    ? "You"
+                    : selectedUser.fullName}
+                </span>
+
+                <span>•</span>
+
+                <span>
+                  {formatMessageTime(message.createdAt)}
+                </span>
+              </div>
+            </button>
+          ))}
+        </section>
       )}
 
       {/* ------ chat_area ------ */}
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className='flex flex-col h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6'
+        className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6"
       >
         {loadingOlderMessages && (
           <p className="text-center text-xs text-gray-400 py-2">
@@ -565,8 +925,14 @@ const ChatContainer = () => {
         ) : (
           messages.map((msg) => (
             <div
+              id={`message-${msg._id}`}
               key={msg._id}
-              className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id ? "flex-row-reverse" : ""
+              className={`flex items-end gap-2 justify-end rounded-2xl px-2 py-1 transition-all duration-500 ${msg.senderId !== authUser._id
+                ? "flex-row-reverse"
+                : ""
+                } ${highlightedMessageId === msg._id
+                  ? "bg-violet-500/[0.14] ring-1 ring-violet-400/25"
+                  : "bg-transparent"
                 }`}
             >
               {msg.image ? (
