@@ -1,6 +1,7 @@
 import { useContext, useMemo } from "react";
 
 import assets from "../assets/assets";
+import defaultAvatar from "../assets/branding/lumo-avatar-default.svg";
 import { ChatContext } from "../../context/ChatContext";
 import { AuthContext } from "../../context/AuthContext";
 
@@ -135,7 +136,7 @@ ease-in-out
               <img
                 src={
                   selectedUser.profilePic ||
-                  assets.avatar_icon
+                  defaultAvatar
                 }
                 alt={selectedUser.fullName}
                 className="

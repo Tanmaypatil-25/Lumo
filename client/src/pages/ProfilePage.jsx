@@ -7,6 +7,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import assets from "../assets/assets";
+import defaultAvatar from "../assets/branding/lumo-avatar-default.svg";
 import { AuthContext } from "../../context/AuthContext.jsx";
 
 import toast from "react-hot-toast";
@@ -555,7 +556,7 @@ const ProfilePage = () => {
                       <img
                         src={
                           previewUrl ||
-                          assets.avatar_icon
+                          defaultAvatar
                         }
                         alt="Profile preview"
                         className="
@@ -994,7 +995,7 @@ const ProfilePage = () => {
                       <img
                         src={
                           previewUrl ||
-                          assets.avatar_icon
+                          defaultAvatar
                         }
                         alt="Profile"
                         className="

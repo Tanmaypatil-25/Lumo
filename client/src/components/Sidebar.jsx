@@ -2,6 +2,8 @@ import { useContext, useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 import assets from "../assets/assets";
+import defaultAvatar from "../assets/branding/lumo-avatar-default.svg";
+import lumoWordmark from "../assets/branding/lumo-wordmark.svg";
 import { AuthContext } from "../../context/AuthContext";
 import { ChatContext } from "../../context/ChatContext";
 
@@ -73,13 +75,19 @@ const Sidebar = () => {
                 <div className="flex items-center justify-between">
                     <button
                         type="button"
-                        className="flex items-center"
+                        className="
+    flex
+    items-center
+    rounded-xl
+    transition-opacity
+    hover:opacity-90
+  "
                         aria-label="Lumo home"
                     >
                         <img
-                            src={assets.logo}
+                            src={lumoWordmark}
                             alt="Lumo"
-                            className="h-8 w-auto object-contain"
+                            className="h-11 w-auto max-w-[175px] object-contain object-left"
                         />
                     </button>
 
@@ -242,7 +250,7 @@ const Sidebar = () => {
 
                                 <div className="relative shrink-0">
                                     <img
-                                        src={user?.profilePic || assets.avatar_icon}
+                                        src={user?.profilePic || defaultAvatar}
                                         alt={user.fullName}
                                         className="h-11 w-11 rounded-full object-cover ring-1 ring-white/[0.08]"
                                     />

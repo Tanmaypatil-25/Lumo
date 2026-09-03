@@ -1,6 +1,8 @@
 import { useContext, useState } from "react";
 
 import assets from "../assets/assets";
+import lumoMark from "../assets/branding/lumo-mark.svg";
+
 import { AuthContext } from "../../context/AuthContext";
 
 
@@ -189,21 +191,22 @@ const LoginPage = () => {
 
             <div
               className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-[14px]
-                border
-                border-violet-400/[0.12]
-                bg-violet-500/[0.09]
-              "
+    flex
+    h-11
+    w-11
+    items-center
+    justify-center
+  "
             >
               <img
-                src={assets.logo_icon}
+                src={lumoMark}
                 alt=""
-                className="h-7 w-7 object-contain"
+                className="
+      h-10
+      w-10
+      object-contain
+    "
+                aria-hidden="true"
               />
             </div>
 
@@ -1114,8 +1117,7 @@ const LoginPage = () => {
 
 
                 {/* Terms */}
-                {
-                  !isDataSubmitted && (
+                {isSignup && !isDataSubmitted && (
                     <label
                       className="
                         mt-5

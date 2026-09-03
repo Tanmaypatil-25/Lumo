@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from 'react'
 import assets from '../assets/assets'
+import defaultAvatar from "../assets/branding/lumo-avatar-default.svg";
 import { formatMessageTime } from '../lib/utils'
 import { ChatContext } from '../../context/ChatContext'
 import { AuthContext } from '../../context/AuthContext'
@@ -662,7 +663,7 @@ const ChatContainer = ({
           <img
             src={
               selectedUser.profilePic ||
-              assets.avatar_icon
+              defaultAvatar
             }
             alt={selectedUser.fullName}
             className="h-11 w-11 rounded-full object-cover ring-1 ring-white/[0.10]"
@@ -1054,9 +1055,9 @@ const ChatContainer = ({
                         src={
                           isOwnMessage
                             ? authUser?.profilePic ||
-                            assets.avatar_icon
+                            defaultAvatar
                             : selectedUser?.profilePic ||
-                            assets.avatar_icon
+                            defaultAvatar
                         }
                         alt=""
                         className="h-7 w-7 rounded-full object-cover ring-1 ring-white/[0.08]"

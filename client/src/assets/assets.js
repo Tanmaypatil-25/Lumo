@@ -1,4 +1,3 @@
-import avatar_icon from './avatar_icon.png'
 import gallery_icon from './gallery_icon.svg'
 import help_icon from './help_icon.png'
 import logo_icon from './logo_icon.svg'
@@ -13,7 +12,6 @@ import code from './code.svg'
 import bgImage from './bgImage.svg'
 
 const assets = {
-    avatar_icon,
     gallery_icon,
     help_icon,
     logo_big,
