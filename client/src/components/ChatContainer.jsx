@@ -9,7 +9,10 @@ import {
   ALLOWED_IMAGE_TYPES
 } from "../constants/chat";
 
-const ChatContainer = () => {
+const ChatContainer = ({
+  detailsOpen,
+  onToggleDetails
+}) => {
 
   const {
     messages,
@@ -729,8 +732,30 @@ const ChatContainer = () => {
 
           <button
             type="button"
-            className="lumo-interactive hidden h-10 w-10 items-center justify-center rounded-xl border border-transparent hover:border-white/[0.07] hover:bg-white/[0.05] md:flex"
-            aria-label="Conversation information"
+            onClick={onToggleDetails}
+            className={`
+    lumo-interactive
+    hidden
+    h-10
+    w-10
+    items-center
+    justify-center
+    rounded-xl
+    border
+    transition-all
+    duration-200
+    md:flex
+    ${detailsOpen
+                ? "border-violet-400/20 bg-violet-500/[0.12]"
+                : "border-transparent hover:border-white/[0.07] hover:bg-white/[0.05]"
+              }
+  `}
+            aria-label={
+              detailsOpen
+                ? "Close conversation information"
+                : "Open conversation information"
+            }
+            aria-expanded={detailsOpen}
           >
             <svg
               viewBox="0 0 24 24"
