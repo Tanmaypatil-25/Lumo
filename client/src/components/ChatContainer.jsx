@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from 'react'
-import assets from '../assets/assets'
 import defaultAvatar from "../assets/branding/lumo-avatar-default.svg";
+import lumoMark from "../assets/branding/lumo-mark.svg";
 import { formatMessageTime } from '../lib/utils'
 import { ChatContext } from '../../context/ChatContext'
 import { AuthContext } from '../../context/AuthContext'
@@ -2081,9 +2081,17 @@ const ChatContainer = ({
 
     </div>
   ) : (
-    <div className='flex flex-col items-center justify-center gap-2 text-gray-500 bg-white/10 max-md:hidden'>
-      <img src={assets.logo_icon} className='max-w-16' alt="" />
-      <p className='text-lg font-medium text-white'>Chat anytime, anywhere</p>
+    <div className="flex flex-col items-center justify-center gap-3 bg-white/10 text-gray-500 max-md:hidden">
+      <img
+        src={lumoMark}
+        alt=""
+        className="h-20 w-20 object-contain"
+        aria-hidden="true"
+      />
+
+      <p className="text-lg font-medium text-white">
+        Good conversations start here.
+      </p>
     </div>
   )
 }

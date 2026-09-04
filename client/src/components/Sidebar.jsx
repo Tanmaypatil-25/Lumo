@@ -1,7 +1,6 @@
 import { useContext, useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-import assets from "../assets/assets";
 import defaultAvatar from "../assets/branding/lumo-avatar-default.svg";
 import lumoWordmark from "../assets/branding/lumo-wordmark.svg";
 import { AuthContext } from "../../context/AuthContext";
@@ -75,19 +74,30 @@ const Sidebar = () => {
                 <div className="flex items-center justify-between">
                     <button
                         type="button"
+                        onClick={() => {
+                            setSelectedUser(null);
+                            navigate("/");
+                        }}
                         className="
     flex
     items-center
     rounded-xl
     transition-opacity
     hover:opacity-90
+    active:scale-[0.98]
   "
-                        aria-label="Lumo home"
+                        aria-label="Go to Lumo home"
                     >
                         <img
                             src={lumoWordmark}
                             alt="Lumo"
-                            className="h-11 w-auto max-w-[175px] object-contain object-left"
+                            className="
+      h-11
+      w-auto
+      max-w-[175px]
+      object-contain
+      object-left
+    "
                         />
                     </button>
 
@@ -99,11 +109,31 @@ const Sidebar = () => {
                             aria-label="Open menu"
                             aria-expanded={menuOpen}
                         >
-                            <img
-                                src={assets.menu_icon}
-                                alt=""
-                                className="h-[18px] w-[18px] opacity-75"
-                            />
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                className="h-[19px] w-[19px]"
+                                aria-hidden="true"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="5"
+                                    r="1.5"
+                                    fill="currentColor"
+                                />
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="1.5"
+                                    fill="currentColor"
+                                />
+                                <circle
+                                    cx="12"
+                                    cy="19"
+                                    r="1.5"
+                                    fill="currentColor"
+                                />
+                            </svg>
                         </button>
 
                         {menuOpen && (
@@ -151,11 +181,32 @@ const Sidebar = () => {
                 {/* ================= SEARCH ================= */}
 
                 <div className="mt-5 flex h-11 items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.04] pl-4 pr-2.5 transition-all duration-200 hover:bg-white/[0.055] focus-within:border-white/[0.12] focus-within:bg-white/[0.065] focus-within:shadow-[0_0_0_3px_rgba(139,92,246,0.06)]">
-                    <img
-                        src={assets.search_icon}
-                        alt=""
-                        className="h-4 w-4 shrink-0 opacity-50"
-                    />
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        className="
+    h-[18px]
+    w-[18px]
+    shrink-0
+    text-zinc-500
+  "
+                        aria-hidden="true"
+                    >
+                        <circle
+                            cx="11"
+                            cy="11"
+                            r="6.5"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                        />
+
+                        <path
+                            d="M16 16L20 20"
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinecap="round"
+                        />
+                    </svg>
 
                     <input
                         value={input}

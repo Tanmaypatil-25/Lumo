@@ -1,6 +1,5 @@
 import { useContext, useMemo } from "react";
 
-import assets from "../assets/assets";
 import defaultAvatar from "../assets/branding/lumo-avatar-default.svg";
 import { ChatContext } from "../../context/ChatContext";
 import { AuthContext } from "../../context/AuthContext";

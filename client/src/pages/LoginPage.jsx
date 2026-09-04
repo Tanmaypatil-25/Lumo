@@ -1,6 +1,5 @@
 import { useContext, useState } from "react";
 
-import assets from "../assets/assets";
 import lumoMark from "../assets/branding/lumo-mark.svg";
 
 import { AuthContext } from "../../context/AuthContext";
@@ -467,21 +466,18 @@ const LoginPage = () => {
 
               <div
                 className="
-                  flex
-                  h-10
-                  w-10
-                  items-center
-                  justify-center
-                  rounded-[13px]
-                  border
-                  border-violet-400/[0.12]
-                  bg-violet-500/[0.09]
-                "
+    flex
+    h-11
+    w-11
+    items-center
+    justify-center
+  "
               >
                 <img
-                  src={assets.logo_icon}
+                  src={lumoMark}
                   alt=""
-                  className="h-6 w-6"
+                  className="h-10 w-10 object-contain"
+                  aria-hidden="true"
                 />
               </div>
 
@@ -1118,8 +1114,8 @@ const LoginPage = () => {
 
                 {/* Terms */}
                 {isSignup && !isDataSubmitted && (
-                    <label
-                      className="
+                  <label
+                    className="
                         mt-5
                         flex
                         cursor-pointer
@@ -1129,27 +1125,27 @@ const LoginPage = () => {
                         leading-5
                         text-zinc-500
                       "
-                    >
+                  >
 
-                      <input
-                        type="checkbox"
-                        required
-                        className="
+                    <input
+                      type="checkbox"
+                      required
+                      className="
                           mt-1
                           h-4
                           w-4
                           shrink-0
                           accent-violet-500
                         "
-                      />
+                    />
 
-                      <span>
-                        I agree to the Terms of Use
-                        and Privacy Policy.
-                      </span>
+                    <span>
+                      I agree to the Terms of Use
+                      and Privacy Policy.
+                    </span>
 
-                    </label>
-                  )
+                  </label>
+                )
                 }
 
 

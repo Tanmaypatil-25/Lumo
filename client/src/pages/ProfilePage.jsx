@@ -6,7 +6,6 @@ import {
 
 import { useNavigate } from "react-router-dom";
 
-import assets from "../assets/assets";
 import defaultAvatar from "../assets/branding/lumo-avatar-default.svg";
 import { AuthContext } from "../../context/AuthContext.jsx";
 
