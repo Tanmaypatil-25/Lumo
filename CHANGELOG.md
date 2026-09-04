@@ -7,6 +7,17 @@ improvements, fixes, and architectural changes can be tracked over time.
 
 ---
 
+## [2.0.1] - 2026-09-04
+
+### Fixed
+
+- Fixed mobile viewport sizing when Chrome browser controls expand or collapse.
+- Pinned the application shell to the visible viewport to prevent the conversation header from being hidden.
+- Prevented outer-page overscroll while preserving internal chat scrolling.
+- Improved mobile chat layout stability across dynamic browser viewport changes.
+
+---
+
 ## [2.0.0] - 2026-09-04
 
 ### Added
