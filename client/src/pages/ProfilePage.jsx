@@ -231,8 +231,8 @@ const ProfilePage = () => {
           mx-auto
           w-full
           max-w-6xl
-          px-4
-          py-6
+          px-3
+          py-3
           sm:px-6
           sm:py-8
           lg:px-8
@@ -241,8 +241,9 @@ const ProfilePage = () => {
         <section
           className="
             overflow-hidden
-            rounded-[28px]
+            rounded-[22px]
             border
+            sm:rounded-[28px]
             border-white/[0.08]
             bg-[#121217]/90
             shadow-2xl
@@ -263,10 +264,11 @@ const ProfilePage = () => {
               border-b
               border-white/[0.07]
               bg-[#121217]/95
-              px-4
-              py-3.5
+              px-3
+              py-3
               backdrop-blur-2xl
               sm:px-6
+              sm:py-3.5
             "
           >
             {/* Header left */}
@@ -288,9 +290,11 @@ const ProfilePage = () => {
                 className="
                   lumo-interactive
                   flex
-                  h-10
-                  w-10
+                  h-9
+                  w-9
                   shrink-0
+                  sm:h-10
+                  sm:w-10
                   items-center
                   justify-center
                   rounded-xl
@@ -371,9 +375,11 @@ const ProfilePage = () => {
                   border
                   border-white/[0.08]
                   bg-white/[0.035]
-                  px-4
+                  px-3
                   py-2.5
-                  text-sm
+                  text-xs
+                  sm:px-4
+                  sm:text-sm
                   font-medium
                   text-zinc-400
                   transition
@@ -398,8 +404,9 @@ const ProfilePage = () => {
                 className="
                   lumo-interactive
                   inline-flex
-                  min-w-[116px]
+                  min-w-[88px]
                   items-center
+                  sm:min-w-[116px]
                   justify-center
                   gap-2
                   rounded-xl
@@ -471,7 +478,7 @@ const ProfilePage = () => {
               id="profile-form"
               onSubmit={handleSubmit}
               className="
-                p-5
+                p-4
                 sm:p-7
                 lg:p-9
               "
@@ -497,8 +504,9 @@ const ProfilePage = () => {
                 <h2
                   className="
                     mt-2
-                    text-2xl
+                    text-[22px]
                     font-semibold
+                    sm:text-2xl
                     tracking-[-0.025em]
                     text-zinc-100
                   "
@@ -527,8 +535,9 @@ const ProfilePage = () => {
 
                 <div
                   className="
-                    mt-7
+                    mt-6
                     rounded-2xl
+                    sm:mt-7
                     border
                     border-white/[0.07]
                     bg-white/[0.025]
@@ -538,18 +547,20 @@ const ProfilePage = () => {
                   <div
                     className="
                       flex
-                      flex-col
-                      gap-4
-                      sm:flex-row
+                      items-start
+                      gap-3
                       sm:items-center
+                      sm:gap-4
                     "
                   >
                     <div
                       className="
                         relative
-                        h-16
-                        w-16
+                        h-14
+                        w-14
                         shrink-0
+                        sm:h-16
+                        sm:w-16
                       "
                     >
                       <img
@@ -747,9 +758,10 @@ const ProfilePage = () => {
                       border
                       border-white/[0.08]
                       bg-white/[0.035]
-                      px-4
+                      px-3.5
                       transition
                       focus-within:border-violet-400/30
+                      sm:px-4
                       focus-within:bg-white/[0.05]
                     "
                   >
@@ -863,13 +875,16 @@ const ProfilePage = () => {
                       }
                       placeholder="Tell people a little about yourself"
                       className="
-                        min-h-28
+                        min-h-24
                         w-full
+                        sm:min-h-28
                         resize-none
                         bg-transparent
-                        px-4
-                        py-3.5
+                        px-3.5
+                        py-3
                         text-sm
+                        sm:px-4
+                        sm:py-3.5
                         leading-6
                         text-zinc-200
                         outline-none
@@ -883,9 +898,10 @@ const ProfilePage = () => {
 
                 <div
                   className="
-                    mt-6
+                    mt-5
                     grid
                     grid-cols-2
+                    sm:mt-6
                     gap-3
                     sm:hidden
                   "
@@ -944,7 +960,7 @@ const ProfilePage = () => {
                 border-t
                 border-white/[0.07]
                 bg-white/[0.018]
-                p-5
+                p-4
                 sm:p-7
                 lg:border-l
                 lg:border-t-0
@@ -973,13 +989,15 @@ const ProfilePage = () => {
                   className="
                     mt-4
                     overflow-hidden
-                    rounded-[24px]
+                    rounded-[20px]
+                    sm:rounded-[24px]
                     border
                     border-white/[0.08]
                     bg-gradient-to-b
                     from-white/[0.055]
                     to-white/[0.025]
-                    p-6
+                    p-5
+                    sm:p-6
                   "
                 >
                   <div
@@ -998,9 +1016,12 @@ const ProfilePage = () => {
                         }
                         alt="Profile"
                         className="
-                          h-28
-                          w-28
-                          rounded-[28px]
+                          h-24
+                          w-24
+                          rounded-[24px]
+                          sm:h-28
+                          sm:w-28
+                          sm:rounded-[28px]
                           object-cover
                           shadow-xl
                           shadow-black/30

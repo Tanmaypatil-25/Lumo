@@ -630,16 +630,16 @@ const ChatContainer = ({
   }, [messages.length, loadingOlderMessages]);
 
   return selectedUser ? (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-white/[0.012]">
+    <div className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-white/[0.012]">
       {/* ================= CHAT HEADER ================= */}
 
-      <header className="relative z-20 flex h-[76px] shrink-0 items-center gap-3 border-b border-white/[0.07] bg-white/[0.018] px-5 backdrop-blur-xl">
+      <header className="relative z-20 flex h-[72px] shrink-0 items-center gap-2 border-b border-white/[0.07] bg-white/[0.018] px-3 backdrop-blur-xl md:h-[76px] md:gap-3 md:px-5">
 
         {/* Mobile back button */}
         <button
           type="button"
           onClick={() => setSelectedUser(null)}
-          className="lumo-interactive mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-300 hover:bg-white/[0.07] hover:text-white active:scale-95 md:hidden"
+          className="lumo-interactive flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-zinc-300 hover:bg-white/[0.07] hover:text-white active:scale-95 md:hidden"
           aria-label="Back to conversations"
         >
           <svg
@@ -666,7 +666,7 @@ const ChatContainer = ({
               defaultAvatar
             }
             alt={selectedUser.fullName}
-            className="h-11 w-11 rounded-full object-cover ring-1 ring-white/[0.10]"
+            className="h-10 w-10 rounded-full object-cover ring-1 ring-white/[0.10] md:h-11 md:w-11"
           />
 
           {onlineUsers.includes(selectedUser._id) && (
@@ -701,7 +701,7 @@ const ChatContainer = ({
         </div>
 
         {/* Header actions */}
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-0.5 md:gap-1">
 
           <button
             type="button"
@@ -709,7 +709,7 @@ const ChatContainer = ({
             onClick={() =>
               setSearchOpen((current) => !current)
             }
-            className={`lumo-interactive flex h-10 w-10 items-center justify-center rounded-xl border transition-all duration-200 ${searchOpen
+            className={`lumo-interactive flex h-9 w-9 items-center justify-center rounded-xl border transition-all duration-200 md:h-10 md:w-10 ${searchOpen
               ? "border-violet-400/20 bg-violet-500/[0.12]"
               : "border-transparent hover:border-white/[0.07] hover:bg-white/[0.05]"
               }`}
@@ -736,16 +736,17 @@ const ChatContainer = ({
             onClick={onToggleDetails}
             className={`
     lumo-interactive
-    hidden
-    h-10
-    w-10
+    flex
+    h-9
+    w-9
     items-center
+    md:h-10
+    md:w-10
     justify-center
     rounded-xl
     border
     transition-all
     duration-200
-    md:flex
     ${detailsOpen
                 ? "border-violet-400/20 bg-violet-500/[0.12]"
                 : "border-transparent hover:border-white/[0.07] hover:bg-white/[0.05]"
@@ -964,7 +965,7 @@ const ChatContainer = ({
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-6"
+        className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 md:px-6 md:py-5"
       >
         {loadingOlderMessages && (
           <p className="text-center text-xs text-gray-400 py-2">
@@ -1042,7 +1043,7 @@ const ChatContainer = ({
                   }`}
               >
                 <div
-                  className={`flex max-w-[85%] items-end gap-2.5 md:max-w-[72%] ${isOwnMessage
+                  className={`flex max-w-[88%] items-end gap-2 md:max-w-[72%] md:gap-2.5 ${isOwnMessage
                     ? "flex-row-reverse"
                     : "flex-row"
                     }`}
@@ -1131,8 +1132,9 @@ const ChatContainer = ({
           block
           max-h-[380px]
           w-full
-          max-w-[320px]
+          max-w-full
           object-cover
+          md:max-w-[320px]
           transition-transform
           duration-300
           hover:scale-[1.015]
@@ -1204,7 +1206,7 @@ const ChatContainer = ({
                         ) : (
                           msg.text && (
                             <p
-                              className={`max-w-[320px] whitespace-pre-wrap break-words px-2.5 pb-2 pt-2.5 text-[14px] leading-[1.5] ${isOwnMessage
+                              className={`max-w-full whitespace-pre-wrap break-words px-2.5 pb-2 pt-2.5 text-[14px] leading-[1.5] md:max-w-[320px] ${isOwnMessage
                                 ? "text-zinc-50"
                                 : "text-zinc-200"
                                 }`}
@@ -1219,7 +1221,7 @@ const ChatContainer = ({
                     ) : editingMessageId === msg._id ? (
 
                       /* NORMAL TEXT EDITING */
-                      <div className="min-w-[220px] rounded-2xl border border-white/[0.08] bg-white/[0.05] p-2">
+                      <div className="min-w-[180px] rounded-2xl border border-white/[0.08] bg-white/[0.05] p-2 sm:min-w-[220px]">
 
                         <input
                           type="text"
@@ -1773,7 +1775,7 @@ const ChatContainer = ({
     border-t
     border-white/[0.06]
     bg-[#0f0f14]/80
-    px-4
+    px-3
     py-3
     backdrop-blur-2xl
     md:px-5
@@ -1857,7 +1859,7 @@ const ChatContainer = ({
           </div>
         )}
 
-        <div className="flex items-end gap-2.5">
+        <div className="flex items-end gap-2">
 
           {/* MAIN INPUT SURFACE */}
           <div
@@ -1870,8 +1872,10 @@ const ChatContainer = ({
         border
         border-white/[0.08]
         bg-white/[0.045]
-        px-2
-        py-2
+        px-1.5
+py-1
+md:px-2
+md:py-2
         shadow-[0_10px_35px_rgba(0,0,0,0.12)]
         transition
         focus-within:border-violet-400/[0.18]
@@ -1999,7 +2003,9 @@ const ChatContainer = ({
         lumo-interactive
         flex
         h-11
-        w-11
+w-11
+md:h-12
+md:w-12
         shrink-0
         items-center
         justify-center
@@ -2072,7 +2078,7 @@ const ChatContainer = ({
 
         </div>
 
-        <div className="mt-1.5 px-2">
+        <div className="mt-1.5 hidden px-2 sm:block">
           <p className="text-[10px] text-zinc-600">
             Enter to send • Shift + Enter for a new line
           </p>
@@ -2081,17 +2087,54 @@ const ChatContainer = ({
 
     </div>
   ) : (
-    <div className="flex flex-col items-center justify-center gap-3 bg-white/10 text-gray-500 max-md:hidden">
-      <img
-        src={lumoMark}
-        alt=""
-        className="h-20 w-20 object-contain"
-        aria-hidden="true"
+    <div
+      className="
+        relative
+        hidden
+        h-full
+        min-h-0
+        min-w-0
+        flex-1
+        flex-col
+        items-center
+        justify-center
+        overflow-hidden
+        bg-white/[0.012]
+        px-6
+        text-center
+        md:flex
+      "
+    >
+      <div
+        className="
+          pointer-events-none
+          absolute
+          h-64
+          w-64
+          rounded-full
+          bg-violet-500/[0.07]
+          blur-[110px]
+        "
       />
 
-      <p className="text-lg font-medium text-white">
-        Good conversations start here.
-      </p>
+      <div className="relative z-10 flex flex-col items-center gap-4">
+        <img
+          src={lumoMark}
+          alt=""
+          className="h-20 w-20 object-contain lg:h-24 lg:w-24"
+          aria-hidden="true"
+        />
+
+        <div>
+          <p className="text-lg font-semibold tracking-[-0.02em] text-zinc-100">
+            Good conversations start here.
+          </p>
+
+          <p className="mt-1.5 text-sm text-zinc-500">
+            Select a conversation from the sidebar to start chatting.
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

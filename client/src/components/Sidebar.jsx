@@ -65,12 +65,12 @@ const Sidebar = () => {
 
     return (
         <aside
-            className={`relative flex h-full min-h-0 flex-col border-r border-white/[0.07] bg-white/[0.025] backdrop-blur-2xl ${selectedUser ? "max-md:hidden" : ""
+            className={`relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-white/[0.07] bg-white/[0.025] backdrop-blur-2xl ${selectedUser ? "max-md:hidden" : ""
                 }`}
         >
             {/* ================= HEADER ================= */}
 
-            <div className="shrink-0 px-5 pb-4 pt-5">
+            <div className="shrink-0 px-4 pb-3 pt-4 sm:px-5 sm:pb-4 sm:pt-5">
                 <div className="flex items-center justify-between">
                     <button
                         type="button"
@@ -92,11 +92,13 @@ const Sidebar = () => {
                             src={lumoWordmark}
                             alt="Lumo"
                             className="
-      h-11
+      h-10
       w-auto
-      max-w-[175px]
+      max-w-[160px]
       object-contain
       object-left
+      sm:h-11
+      sm:max-w-[175px]
     "
                         />
                     </button>
@@ -137,7 +139,7 @@ const Sidebar = () => {
                         </button>
 
                         {menuOpen && (
-                            <div className="absolute right-0 top-11 z-30 w-44 overflow-hidden rounded-2xl border border-white/[0.10] bg-[#17171D]/95 p-1.5 shadow-2xl shadow-black/40 backdrop-blur-2xl">
+                            <div className="absolute right-0 top-11 z-30 w-40 overflow-hidden rounded-2xl border border-white/[0.10] bg-[#17171D]/95 p-1.5 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:w-44">
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -168,19 +170,19 @@ const Sidebar = () => {
 
                 {/* ================= TITLE ================= */}
 
-                <div className="mt-6">
-                    <h1 className="text-xl font-semibold tracking-[-0.02em] text-[var(--lumo-text-primary)]">
+                <div className="mt-5 sm:mt-6">
+                    <h1 className="text-[19px] font-semibold tracking-[-0.02em] text-[var(--lumo-text-primary)] sm:text-xl">
                         Messages
                     </h1>
 
-                    <p className="mt-1 text-xs text-[var(--lumo-text-muted)]">
+                    <p className="mt-1 text-[11px] leading-5 text-[var(--lumo-text-muted)] sm:text-xs">
                         Stay connected with your conversations
                     </p>
                 </div>
 
                 {/* ================= SEARCH ================= */}
 
-                <div className="mt-5 flex h-11 items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.04] pl-4 pr-2.5 transition-all duration-200 hover:bg-white/[0.055] focus-within:border-white/[0.12] focus-within:bg-white/[0.065] focus-within:shadow-[0_0_0_3px_rgba(139,92,246,0.06)]">
+                <div className="mt-4 flex h-11 items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.04] pl-3.5 pr-2.5 transition-all duration-200 hover:bg-white/[0.055] focus-within:border-white/[0.12] focus-within:bg-white/[0.065] focus-within:shadow-[0_0_0_3px_rgba(139,92,246,0.06)] sm:mt-5 sm:pl-4">
                     <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -231,7 +233,7 @@ const Sidebar = () => {
 
             {/* ================= CONVERSATIONS ================= */}
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4">
+            <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-2.5 pb-4 sm:px-3">
                 <div className="px-2 pb-2 pt-1">
                     <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--lumo-text-muted)]">
                         Conversations
@@ -292,7 +294,7 @@ const Sidebar = () => {
                                 type="button"
                                 key={user._id}
                                 onClick={() => setSelectedUser(user)}
-                                className={`lumo-interactive group relative flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left ${isSelected
+                                className={`lumo-interactive group relative flex w-full items-center gap-2.5 rounded-2xl border px-2.5 py-2.5 text-left sm:gap-3 sm:px-3 sm:py-3 ${isSelected
                                     ? "border-violet-400/20 bg-violet-500/[0.12]"
                                     : "border-transparent hover:border-white/[0.05] hover:bg-white/[0.045]"
                                     }`}
@@ -303,7 +305,7 @@ const Sidebar = () => {
                                     <img
                                         src={user?.profilePic || defaultAvatar}
                                         alt={user.fullName}
-                                        className="h-11 w-11 rounded-full object-cover ring-1 ring-white/[0.08]"
+                                        className="h-10 w-10 rounded-full object-cover ring-1 ring-white/[0.08] sm:h-11 sm:w-11"
                                     />
 
                                     <span

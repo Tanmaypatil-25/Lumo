@@ -119,7 +119,7 @@ const LoginPage = () => {
         flex
         min-h-screen
         w-full
-        overflow-hidden
+        overflow-x-hidden
         bg-[#0B0B0F]
         text-white
       "
@@ -443,9 +443,10 @@ const LoginPage = () => {
             min-h-screen
             items-center
             justify-center
-            px-5
-            py-10
+            px-4
+            py-6
             sm:px-8
+            sm:py-10
             lg:px-10
           "
         >
@@ -455,8 +456,9 @@ const LoginPage = () => {
             {/* Mobile logo */}
             <div
               className="
-                mb-10
+                mb-6
                 flex
+                sm:mb-10
                 items-center
                 justify-center
                 gap-2.5
@@ -476,7 +478,7 @@ const LoginPage = () => {
                 <img
                   src={lumoMark}
                   alt=""
-                  className="h-10 w-10 object-contain"
+                  className="h-9 w-9 object-contain sm:h-10 sm:w-10"
                   aria-hidden="true"
                 />
               </div>
@@ -497,11 +499,12 @@ const LoginPage = () => {
             {/* AUTH CARD */}
             <div
               className="
-                rounded-[26px]
+                rounded-[22px]
                 border
+                sm:rounded-[26px]
                 border-white/[0.075]
                 bg-white/[0.035]
-                p-6
+                p-5
                 shadow-[0_24px_80px_rgba(0,0,0,0.28)]
                 backdrop-blur-2xl
                 sm:p-8
@@ -517,8 +520,9 @@ const LoginPage = () => {
 
                     <p
                       className="
-                        text-[24px]
+                        text-[22px]
                         font-semibold
+                        sm:text-[24px]
                         tracking-[-0.025em]
                         text-zinc-100
                       "
@@ -607,7 +611,7 @@ const LoginPage = () => {
                 {/* Signup progress */}
                 {
                   isSignup && (
-                    <div className="mt-6">
+                    <div className="mt-5 sm:mt-6">
 
                       <div className="flex gap-2">
 
@@ -662,10 +666,10 @@ const LoginPage = () => {
 
               <form
                 onSubmit={onSubmitHandler}
-                className="mt-7"
+                className="mt-6 sm:mt-7"
               >
 
-                <div className="space-y-4">
+                <div className="space-y-3.5 sm:space-y-4">
 
                   {/* Full name */}
                   {
@@ -696,8 +700,9 @@ const LoginPage = () => {
                             border
                             border-white/[0.07]
                             bg-white/[0.035]
-                            px-4
+                            px-3.5
                             transition
+                            sm:px-4
                             focus-within:border-violet-400/30
                             focus-within:bg-white/[0.05]
                           "
@@ -1085,8 +1090,9 @@ const LoginPage = () => {
                           placeholder="Tell people a little about yourself..."
                           required
                           className="
-                            min-h-[130px]
+                            min-h-[115px]
                             w-full
+                            sm:min-h-[130px]
                             resize-none
                             rounded-[16px]
                             border
@@ -1116,9 +1122,10 @@ const LoginPage = () => {
                 {isSignup && !isDataSubmitted && (
                   <label
                     className="
-                        mt-5
+                        mt-4
                         flex
                         cursor-pointer
+                        sm:mt-5
                         items-start
                         gap-3
                         text-[12px]
@@ -1155,9 +1162,10 @@ const LoginPage = () => {
                   disabled={submitting}
                   className="
                     lumo-interactive
-                    mt-6
+                    mt-5
                     flex
                     h-12
+                    sm:mt-6
                     w-full
                     items-center
                     justify-center
@@ -1243,8 +1251,9 @@ const LoginPage = () => {
                 {/* Switch auth mode */}
                 <div
                   className="
-                    mt-6
+                    mt-5
                     border-t
+                    sm:mt-6
                     border-white/[0.06]
                     pt-5
                     text-center

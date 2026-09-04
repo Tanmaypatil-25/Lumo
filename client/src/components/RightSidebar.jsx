@@ -6,7 +6,8 @@ import { AuthContext } from "../../context/AuthContext";
 
 
 const RightSideBar = ({
-  detailsOpen
+  detailsOpen,
+  onClose
 }) => {
 
   const {
@@ -55,7 +56,7 @@ const RightSideBar = ({
     <aside
       className={`
     relative
-    hidden
+    flex
     h-full
     min-h-0
     min-w-0
@@ -70,7 +71,6 @@ const RightSideBar = ({
 duration-500
 ease-in-out
 
-    md:flex
 
     ${detailsOpen
           ? `
@@ -88,10 +88,64 @@ ease-in-out
   `}
     >
 
+      <div
+        className="
+    flex
+    h-[76px]
+    items-center
+    justify-between
+    border-b
+    border-white/[0.07]
+    px-4
+    md:hidden
+  "
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          className="
+      lumo-interactive
+      flex
+      h-10
+      w-10
+      items-center
+      justify-center
+      rounded-full
+      text-zinc-300
+      hover:bg-white/[0.07]
+      hover:text-white
+      active:scale-95
+    "
+          aria-label="Back to conversation"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="h-[21px] w-[21px]"
+            aria-hidden="true"
+          >
+            <path
+              d="M15 18L9 12L15 6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
+        <p className="text-sm font-semibold text-white">
+          Conversation details
+        </p>
+
+        <div className="h-10 w-10" />
+      </div>
+
       {/* HEADER */}
       <div
         className="
-          flex
+          hidden
+md:flex
           h-[76px]
           shrink-0
           items-center
@@ -113,7 +167,7 @@ ease-in-out
 
 
       {/* SCROLLABLE CONTENT */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 md:px-5 md:py-6">
 
         {/* PROFILE CARD */}
         <section
@@ -122,7 +176,8 @@ ease-in-out
             border
             border-white/[0.07]
             bg-white/[0.035]
-            p-5
+            p-4
+md:p-5
             shadow-[0_12px_36px_rgba(0,0,0,0.10)]
           "
         >
@@ -201,7 +256,7 @@ ease-in-out
 
 
         {/* MEDIA SECTION */}
-        <section className="mt-7">
+        <section className="mt-6 md:mt-7">
 
           <div className="mb-3 flex items-center justify-between">
 

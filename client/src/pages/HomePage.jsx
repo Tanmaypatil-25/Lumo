@@ -17,7 +17,7 @@ const HomePage = () => {
   const [
     detailsOpen,
     setDetailsOpen
-  ] = useState(true);
+  ] = useState(false);
 
 
   const toggleDetails = () => {
@@ -26,7 +26,15 @@ const HomePage = () => {
 
 
   return (
-    <main className="h-screen w-screen overflow-hidden bg-[#0B0B0F] text-white">
+    <main
+      className="
+        h-screen
+        w-screen
+        overflow-hidden
+        bg-[#0B0B0F]
+        text-white
+      "
+    >
 
       <div
         className={`
@@ -37,8 +45,8 @@ const HomePage = () => {
           overflow-hidden
 
           md:transition-[grid-template-columns]
-md:duration-400
-md:ease-linear
+          md:duration-400
+          md:ease-linear
 
           ${selectedUser
             ? detailsOpen
@@ -49,19 +57,83 @@ md:ease-linear
         `}
       >
 
-        <Sidebar />
+        {/* Sidebar */}
+        <div
+          className={`
+            h-full
+            min-h-0
+            overflow-hidden
+
+            ${selectedUser
+              ? "hidden md:block"
+              : "block"
+            }
+          `}
+        >
+          <Sidebar />
+        </div>
 
 
-        <ChatContainer
-          detailsOpen={detailsOpen}
-          onToggleDetails={toggleDetails}
-        />
+        {/* Conversation */}
+        <div
+          className={`
+            h-full
+            min-h-0
+            min-w-0
+            overflow-hidden
 
-
-        {selectedUser && (
-          <RightSideBar
+            ${selectedUser
+              ? "block"
+              : "hidden md:block"
+            }
+          `}
+        >
+          <ChatContainer
             detailsOpen={detailsOpen}
+            onToggleDetails={toggleDetails}
           />
+        </div>
+
+
+        {/* Conversation details */}
+        {selectedUser && (
+          <>
+            {/* Mobile details */}
+            {detailsOpen && (
+              <div
+                className="
+          fixed
+          inset-0
+          z-50
+          h-full
+          w-full
+          overflow-hidden
+          bg-[#0B0B0F]
+          md:hidden
+        "
+              >
+                <RightSideBar
+                  detailsOpen={detailsOpen}
+                  onClose={toggleDetails}
+                />
+              </div>
+            )}
+
+            {/* Desktop details */}
+            <div
+              className="
+        hidden
+        h-full
+        min-h-0
+        overflow-hidden
+        md:block
+      "
+            >
+              <RightSideBar
+                detailsOpen={detailsOpen}
+              />
+            </div>
+          </>
         )}
 
       </div>
