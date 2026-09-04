@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import defaultAvatar from "../assets/branding/lumo-avatar-default.svg";
 import lumoMark from "../assets/branding/lumo-mark.svg";
 import { formatMessageTime } from '../lib/utils'
@@ -45,6 +45,7 @@ const ChatContainer = ({
   const searchPanelRef = useRef(null);
   const searchButtonRef = useRef(null);
   const messageActionsRef = useRef(null);
+  const paginationRestoreRef = useRef(null);
 
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -307,21 +308,23 @@ const ChatContainer = ({
       container.scrollTop <= 50 &&
       hasMoreMessages &&
       !messagesLoading &&
-      !loadingOlderMessages
+      !loadingOlderMessages &&
+      !paginationRestoreRef.current
     ) {
-      const previousScrollHeight =
-        container.scrollHeight;
+      // Save the exact viewport position BEFORE older messages are
+      // prepended. The layout effect below restores this position
+      // after React has committed the new messages to the DOM.
+      paginationRestoreRef.current = {
+        previousScrollHeight: container.scrollHeight,
+        previousScrollTop: container.scrollTop
+      };
 
-      await loadOlderMessages();
-
-      requestAnimationFrame(() => {
-        const newScrollHeight =
-          container.scrollHeight;
-
-        container.scrollTop =
-          newScrollHeight -
-          previousScrollHeight;
-      });
+      try {
+        await loadOlderMessages();
+      } catch (error) {
+        paginationRestoreRef.current = null;
+        throw error;
+      }
     }
   };
 
@@ -681,23 +684,48 @@ const ChatContainer = ({
     };
   }, [searchOpen]);
 
-  useEffect(() => {
-    if (
-      scrollEnd.current &&
-      messages.length > 0 &&
-      !loadingOlderMessages
-    ) {
+  useLayoutEffect(() => {
+    const container = messagesContainerRef.current;
 
-      scrollEnd.current.scrollIntoView({
-        behavior:
-          initialScrollDoneRef.current
-            ? "smooth"
-            : "auto"
-      });
-
-      initialScrollDoneRef.current = true;
+    if (!container || messages.length === 0) {
+      return;
     }
-  }, [messages.length, loadingOlderMessages]);
+
+    // If this render came from loading older history, restore the
+    // viewport BEFORE the browser paints. This prevents any visible
+    // jump to the bottom and keeps the user on the same message.
+    if (paginationRestoreRef.current) {
+      const {
+        previousScrollHeight,
+        previousScrollTop
+      } = paginationRestoreRef.current;
+
+      const addedHeight =
+        container.scrollHeight -
+        previousScrollHeight;
+
+      container.scrollTop =
+        previousScrollTop +
+        addedHeight;
+
+      paginationRestoreRef.current = null;
+      initialScrollDoneRef.current = true;
+      return;
+    }
+
+    if (!scrollEnd.current) {
+      return;
+    }
+
+    scrollEnd.current.scrollIntoView({
+      behavior:
+        initialScrollDoneRef.current
+          ? "smooth"
+          : "auto"
+    });
+
+    initialScrollDoneRef.current = true;
+  }, [messages.length]);
 
   return selectedUser ? (
     <div className="relative flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-white/[0.012]">
