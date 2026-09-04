@@ -28,8 +28,8 @@ const HomePage = () => {
   return (
     <main
       className="
-        h-screen
-        w-screen
+        h-dvh
+        w-full
         overflow-hidden
         bg-[#0B0B0F]
         text-white
@@ -102,15 +102,15 @@ const HomePage = () => {
             {detailsOpen && (
               <div
                 className="
-          fixed
-          inset-0
-          z-50
-          h-full
-          w-full
-          overflow-hidden
-          bg-[#0B0B0F]
-          md:hidden
-        "
+                  fixed
+                  inset-0
+                  z-50
+                  h-dvh
+                  w-full
+                  overflow-hidden
+                  bg-[#0B0B0F]
+                  md:hidden
+                "
               >
                 <RightSideBar
                   detailsOpen={detailsOpen}
@@ -122,12 +122,12 @@ const HomePage = () => {
             {/* Desktop details */}
             <div
               className="
-        hidden
-        h-full
-        min-h-0
-        overflow-hidden
-        md:block
-      "
+                hidden
+                h-full
+                min-h-0
+                overflow-hidden
+                md:block
+              "
             >
               <RightSideBar
                 detailsOpen={detailsOpen}
