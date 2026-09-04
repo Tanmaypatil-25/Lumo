@@ -7,6 +7,89 @@ improvements, fixes, and architectural changes can be tracked over time.
 
 ---
 
+## [2.0.0] - 2026-09-04
+
+### Added
+
+- Complete Lumo 2.0 visual design system
+- New Lumo brand mark, wordmark, favicon, and default avatar
+- Full-screen responsive application shell
+- Redesigned conversation sidebar
+- Redesigned conversation header
+- Redesigned message composer
+- Redesigned conversation details experience
+- Redesigned authentication experience
+- Redesigned profile settings experience
+- Mobile conversation navigation
+- Mobile full-screen conversation details
+- Touch-friendly message action controls
+- Responsive layouts for mobile, tablet, and desktop
+- Accessible labels and interaction semantics across key controls
+- Reduced-motion support for users who prefer less animation
+- Improved keyboard interaction for dialogs, search, forms, and message controls
+
+### Improved
+
+- Overall application visual hierarchy and consistency
+- Conversation navigation and sidebar usability
+- Message bubble styling and message grouping
+- Image message presentation and caption layout
+- Message search interface and result navigation
+- Message editing and deletion interactions
+- Shared media presentation
+- Conversation details layout and interactions
+- Login and signup flow presentation
+- Signup progress feedback
+- Password visibility controls
+- Profile editing workflow
+- Live profile preview experience
+- Profile image selection and validation feedback
+- Loading and disabled states across authentication and profile forms
+- Mobile touch targets and interaction feedback
+- Responsive spacing and typography
+- Empty conversation presentation
+- Focus and keyboard accessibility
+- Motion and transition behavior
+- Media attachment preview and composer experience
+- Scroll behavior while navigating conversation history
+
+### Fixed
+
+- Conversation layout issues across smaller viewport sizes
+- Conversation details opening incorrectly on mobile
+- Empty conversation state collapsing on desktop
+- Horizontal overflow in responsive layouts
+- Oversized image message bubbles
+- Incorrect image caption sizing and wrapping
+- Mobile message action menus remaining open after outside interaction
+- Message pagination scrolling the user back to the bottom
+- Viewport position changing when older messages are loaded
+- Unwanted focus outlines on text inputs and message composer fields
+- Responsive spacing and alignment inconsistencies across authentication and profile pages
+
+### Accessibility
+
+- Added reduced-motion support across interactive UI elements
+- Improved keyboard focus behavior
+- Improved accessible labels for buttons and form controls
+- Improved search semantics
+- Improved delete confirmation dialog semantics
+- Improved authentication form semantics
+- Improved profile form semantics
+- Improved status and loading feedback
+- Improved keyboard and touch interaction across message controls
+
+### Changed
+
+- Replaced the original tutorial-oriented interface with the Lumo 2.0 design system
+- Replaced legacy tutorial assets with dedicated Lumo branding
+- Updated the application to a modern dark glass-inspired visual language
+- Standardized surfaces, borders, spacing, typography, radii, and interaction states
+- Improved responsive navigation behavior between conversations, chat, and conversation details
+- Refined media messages into compact chat-oriented cards
+
+---
+
 ## [1.0.0] - 2026-09-02
 
 ### Added
@@ -98,13 +181,3 @@ improvements, fixes, and architectural changes can be tracked over time.
 - Improved message pagination architecture
 - Reduced unnecessary data fetching and state updates
 - Cleaned up unused tutorial code and legacy implementation details
-
----
-
-## Future
-
-Development after version 1.0.0 will focus on Lumo 2.0.
-
-Lumo 2.0 will introduce a complete UI/UX overhaul with a new visual system,
-improved responsiveness, refined message interactions, better navigation,
-enhanced accessibility, and a more polished overall chat experience.

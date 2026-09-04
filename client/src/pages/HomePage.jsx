@@ -1,22 +1,146 @@
-import { useContext } from 'react'
-import Sidebar from '../components/Sidebar'
-import ChatContainer from '../components/ChatContainer'
-import RightSideBar from '../components/RightSidebar'
-import { ChatContext } from '../../context/ChatContext'
+import { useContext, useState } from "react";
+
+import Sidebar from "../components/Sidebar";
+import ChatContainer from "../components/ChatContainer";
+import RightSideBar from "../components/RightSidebar";
+
+import { ChatContext } from "../../context/ChatContext";
+
 
 const HomePage = () => {
 
-  const {selectedUser} = useContext(ChatContext)
+  const {
+    selectedUser
+  } = useContext(ChatContext);
+
+
+  const [
+    detailsOpen,
+    setDetailsOpen
+  ] = useState(false);
+
+
+  const toggleDetails = () => {
+    setDetailsOpen((current) => !current);
+  };
+
 
   return (
-    <div className="border w-full h-screen sm:px-[15%] sm:py-[5%]">
-      <div className={`backdrop-blur-xl border-2 border-gray-600 rounded-2xl overflow-hidden h-[100%] grid grid-cols-1 relative ${selectedUser ? 'md:grid-cols-[1fr_1.5fr_1fr xl:grid-cols-[1fr_2fr_1fr]' : 'md:grid-cols-2'}`}>
-        <Sidebar />
-        <ChatContainer />
-        <RightSideBar />
-      </div>
-    </div>
-  )
-}
+    <main
+      className="
+        h-screen
+        w-screen
+        overflow-hidden
+        bg-[#0B0B0F]
+        text-white
+      "
+    >
 
-export default HomePage
+      <div
+        className={`
+          grid
+          h-full
+          w-full
+          grid-cols-1
+          overflow-hidden
+
+          md:transition-[grid-template-columns]
+          md:duration-400
+          md:ease-linear
+
+          ${selectedUser
+            ? detailsOpen
+              ? "md:grid-cols-[320px_minmax(0,1fr)_320px]"
+              : "md:grid-cols-[minmax(300px,0.75fr)_minmax(0,2fr)_0px]"
+            : "md:grid-cols-[320px_minmax(0,1fr)]"
+          }
+        `}
+      >
+
+        {/* Sidebar */}
+        <div
+          className={`
+            h-full
+            min-h-0
+            overflow-hidden
+
+            ${selectedUser
+              ? "hidden md:block"
+              : "block"
+            }
+          `}
+        >
+          <Sidebar />
+        </div>
+
+
+        {/* Conversation */}
+        <div
+          className={`
+            h-full
+            min-h-0
+            min-w-0
+            overflow-hidden
+
+            ${selectedUser
+              ? "block"
+              : "hidden md:block"
+            }
+          `}
+        >
+          <ChatContainer
+            detailsOpen={detailsOpen}
+            onToggleDetails={toggleDetails}
+          />
+        </div>
+
+
+        {/* Conversation details */}
+        {selectedUser && (
+          <>
+            {/* Mobile details */}
+            {detailsOpen && (
+              <div
+                className="
+          fixed
+          inset-0
+          z-50
+          h-full
+          w-full
+          overflow-hidden
+          bg-[#0B0B0F]
+          md:hidden
+        "
+              >
+                <RightSideBar
+                  detailsOpen={detailsOpen}
+                  onClose={toggleDetails}
+                />
+              </div>
+            )}
+
+            {/* Desktop details */}
+            <div
+              className="
+        hidden
+        h-full
+        min-h-0
+        overflow-hidden
+        md:block
+      "
+            >
+              <RightSideBar
+                detailsOpen={detailsOpen}
+              />
+            </div>
+          </>
+        )}
+
+      </div>
+
+    </main>
+  );
+};
+
+
+export default HomePage;

@@ -238,7 +238,7 @@ export const ChatProvider = ({ children }) => {
                 messagesLoading ||
                 loadingOlderMessages
             ) {
-                return;
+                return null;
             }
 
 
@@ -275,7 +275,6 @@ export const ChatProvider = ({ children }) => {
                         ]
                     );
 
-
                     setMessageCursor(
                         data.nextCursor
                     );
@@ -283,7 +282,15 @@ export const ChatProvider = ({ children }) => {
                     setHasMoreMessages(
                         data.hasMore
                     );
+
+                    return {
+                        messages: data.messages,
+                        nextCursor: data.nextCursor,
+                        hasMore: data.hasMore
+                    };
                 }
+
+                return null;
 
             } catch (error) {
 
@@ -293,6 +300,7 @@ export const ChatProvider = ({ children }) => {
                         ?.message ||
                     error.message
                 );
+                return null;
 
             } finally {
 

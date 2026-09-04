@@ -1,13 +1,17 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="512" height="512" rx="112" fill="#0B0B0F"/>
+<svg width="980" height="240" viewBox="0 0 980 240" fill="none" xmlns="http://www.w3.org/2000/svg">
 <defs>
-<linearGradient id="a" x1="128" y1="72" x2="390" y2="420" gradientUnits="userSpaceOnUse">
+<linearGradient id="a" x1="30" y1="20" x2="220" y2="220" gradientUnits="userSpaceOnUse">
 <stop stop-color="#38BDF8"/><stop offset=".38" stop-color="#6366F1"/><stop offset=".72" stop-color="#8B5CF6"/><stop offset="1" stop-color="#EC4899"/>
 </linearGradient>
-<linearGradient id="b" x1="180" y1="120" x2="330" y2="338" gradientUnits="userSpaceOnUse">
+<linearGradient id="b" x1="70" y1="40" x2="150" y2="180" gradientUnits="userSpaceOnUse">
 <stop stop-color="#60A5FA"/><stop offset=".5" stop-color="#7C3AED"/><stop offset="1" stop-color="#D946EF"/>
 </linearGradient>
 </defs>
+<g transform="translate(8 4) scale(.43)">
 <path d="M156 76C117 109 96 159 96 216V322C96 378 141 424 198 424H312C335 424 356 416 372 402L405 430C415 438 430 431 430 418V355C430 328 408 306 381 306H212C191 306 174 289 174 268V174C174 144 186 117 207 98L226 81C238 70 230 50 214 51C193 52 173 61 156 76Z" fill="url(#a)"/>
 <path d="M174 174C174 144 186 117 207 98L242 66C257 52 282 63 282 83V139C282 157 273 174 258 184L206 219C187 232 174 253 174 276V174Z" fill="url(#b)"/>
 <circle cx="250" cy="259" r="14" fill="#D946EF"/><circle cx="300" cy="259" r="14" fill="#7C3AED"/><circle cx="350" cy="259" r="14" fill="#38BDF8"/>
+</g>
+<text x="245" y="128" fill="#F5F5F7" font-size="96" font-weight="700" font-family="Outfit,Inter,Arial,sans-serif" letter-spacing="-3">Lumo</text>
+<text x="250" y="178" fill="#A1A1AA" font-size="25" font-weight="500" font-family="Outfit,Inter,Arial,sans-serif" letter-spacing="10">CHAT AT EASE</text>
 </svg>
