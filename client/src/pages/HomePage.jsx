@@ -28,9 +28,12 @@ const HomePage = () => {
   return (
     <main
       className="
+        fixed
+        inset-0
         h-dvh
         w-full
         overflow-hidden
+        overscroll-none
         bg-[#0B0B0F]
         text-white
       "
