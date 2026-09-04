@@ -46,6 +46,7 @@
   /* Motion */
   --lumo-transition-fast: 150ms;
   --lumo-transition: 200ms;
+  --lumo-transition-slow: 320ms;
 }
 
 /* =========================================================
@@ -61,12 +62,15 @@ html,
 body,
 #root {
   width: 100%;
+  min-width: 0;
   height: 100%;
   margin: 0;
 }
 
 html {
   background: var(--lumo-bg);
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -80,11 +84,38 @@ body {
     var(--lumo-bg);
 
   color: var(--lumo-text-primary);
-
   overflow: hidden;
 
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a,
+label,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+img,
+video {
+  max-width: 100%;
+}
+
+textarea {
+  overflow-wrap: anywhere;
 }
 
 /* =========================================================
@@ -131,6 +162,7 @@ body {
 .lumo-glass {
   background: var(--lumo-surface);
   border: 1px solid var(--lumo-border);
+
   backdrop-filter: blur(var(--lumo-blur));
   -webkit-backdrop-filter: blur(var(--lumo-blur));
 }
@@ -155,28 +187,100 @@ body {
   transition:
     background-color var(--lumo-transition),
     border-color var(--lumo-transition),
+    color var(--lumo-transition),
     opacity var(--lumo-transition),
-    transform var(--lumo-transition);
+    transform var(--lumo-transition),
+    box-shadow var(--lumo-transition);
 }
 
 .lumo-interactive:hover {
   background: var(--lumo-surface-hover);
 }
 
+.lumo-interactive:active {
+  transform: scale(0.98);
+}
+
 /* =========================================================
    ACCESSIBILITY
    ========================================================= */
 
+:focus {
+  outline: none;
+}
+
 button:focus-visible,
 a:focus-visible,
-[role="button"]:focus-visible {
-  outline: 2px solid rgba(139, 92, 246, 0.65);
+[role="button"]:focus-visible,
+[role="menuitem"]:focus-visible {
+  outline: 2px solid rgba(139, 92, 246, 0.72);
   outline-offset: 2px;
 }
 
-/* ================================
-   Browser Autofill — Lumo 2.0
-================================ */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+[aria-disabled="true"],
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+  cursor: not-allowed;
+}
+
+/* Visually hidden utility for accessible-only text */
+.lumo-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* =========================================================
+   MOTION PREFERENCES
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .lumo-interactive:active {
+    transform: none;
+  }
+}
+
+/* =========================================================
+   TOUCH DEVICES
+   ========================================================= */
+
+@media (hover: none) {
+  .lumo-interactive:hover {
+    background: inherit;
+  }
+}
+
+/* =========================================================
+   BROWSER AUTOFILL — LUMO 2.0
+   ========================================================= */
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,

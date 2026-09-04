@@ -53,12 +53,28 @@ const Sidebar = () => {
             }
         };
 
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") {
+                setMenuOpen(false);
+            }
+        };
+
         document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("touchstart", handleClickOutside);
+        document.addEventListener("keydown", handleKeyDown);
 
         return () => {
             document.removeEventListener(
                 "mousedown",
                 handleClickOutside
+            );
+            document.removeEventListener(
+                "touchstart",
+                handleClickOutside
+            );
+            document.removeEventListener(
+                "keydown",
+                handleKeyDown
             );
         };
     }, [menuOpen]);
@@ -79,12 +95,14 @@ const Sidebar = () => {
                             navigate("/");
                         }}
                         className="
+    lumo-interactive
     flex
     items-center
     rounded-xl
     transition-opacity
     hover:opacity-90
     active:scale-[0.98]
+    motion-reduce:transition-none
   "
                         aria-label="Go to Lumo home"
                     >
@@ -108,8 +126,10 @@ const Sidebar = () => {
                             type="button"
                             onClick={() => setMenuOpen((previous) => !previous)}
                             className="lumo-interactive flex h-9 w-9 items-center justify-center rounded-xl border border-transparent hover:border-white/[0.08] hover:bg-white/[0.06]"
-                            aria-label="Open menu"
+                            aria-label={menuOpen ? "Close menu" : "Open menu"}
                             aria-expanded={menuOpen}
+                            aria-haspopup="menu"
+                            aria-controls="sidebar-profile-menu"
                         >
                             <svg
                                 viewBox="0 0 24 24"
@@ -139,14 +159,20 @@ const Sidebar = () => {
                         </button>
 
                         {menuOpen && (
-                            <div className="absolute right-0 top-11 z-30 w-40 overflow-hidden rounded-2xl border border-white/[0.10] bg-[#17171D]/95 p-1.5 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:w-44">
+                            <div
+                                id="sidebar-profile-menu"
+                                role="menu"
+                                aria-label="Account menu"
+                                className="absolute right-0 top-11 z-30 w-40 overflow-hidden rounded-2xl border border-white/[0.10] bg-[#17171D]/95 p-1.5 shadow-2xl shadow-black/40 backdrop-blur-2xl sm:w-44"
+                            >
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setMenuOpen(false);
                                         navigate("/profile");
                                     }}
-                                    className="lumo-interactive flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm text-[var(--lumo-text-secondary)] hover:text-white"
+                                    className="lumo-interactive flex min-h-11 w-full items-center rounded-xl px-3 py-2.5 text-left text-sm text-[var(--lumo-text-secondary)] hover:text-white"
+                                    role="menuitem"
                                 >
                                     Edit profile
                                 </button>
@@ -159,7 +185,8 @@ const Sidebar = () => {
                                         setMenuOpen(false);
                                         logout();
                                     }}
-                                    className="lumo-interactive flex w-full items-center rounded-xl px-3 py-2.5 text-left text-sm text-red-300 hover:bg-red-400/[0.08] hover:text-red-200"
+                                    className="lumo-interactive flex min-h-11 w-full items-center rounded-xl px-3 py-2.5 text-left text-sm text-red-300 hover:bg-red-400/[0.08] hover:text-red-200"
+                                    role="menuitem"
                                 >
                                     Log out
                                 </button>
@@ -182,7 +209,10 @@ const Sidebar = () => {
 
                 {/* ================= SEARCH ================= */}
 
-                <div className="mt-4 flex h-11 items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.04] pl-3.5 pr-2.5 transition-all duration-200 hover:bg-white/[0.055] focus-within:border-white/[0.12] focus-within:bg-white/[0.065] focus-within:shadow-[0_0_0_3px_rgba(139,92,246,0.06)] sm:mt-5 sm:pl-4">
+                <div
+                    role="search"
+                    className="mt-4 flex h-11 items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.04] pl-3.5 pr-2.5 transition-all duration-200 hover:bg-white/[0.055] focus-within:border-white/[0.12] focus-within:bg-white/[0.065] focus-within:shadow-[0_0_0_3px_rgba(139,92,246,0.06)] motion-reduce:transition-none sm:mt-5 sm:pl-4"
+                >
                     <svg
                         viewBox="0 0 24 24"
                         fill="none"
@@ -215,6 +245,8 @@ const Sidebar = () => {
                         onChange={(event) => setInput(event.target.value)}
                         type="text"
                         placeholder="Search conversations"
+                        aria-label="Search conversations"
+                        autoComplete="off"
                         className="min-w-0 flex-1 bg-transparent text-sm text-[var(--lumo-text-primary)] outline-none placeholder:text-[var(--lumo-text-muted)]"
                     />
 
@@ -222,7 +254,7 @@ const Sidebar = () => {
                         <button
                             type="button"
                             onClick={() => setInput("")}
-                            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-lg font-light leading-none text-zinc-400 transition-all duration-200 hover:bg-white/[0.10] hover:text-white active:scale-90"
+                            className="lumo-interactive flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-lg font-light leading-none text-zinc-400 transition-all duration-200 hover:bg-white/[0.10] hover:text-white active:scale-90 motion-reduce:transition-none"
                             aria-label="Clear search"
                         >
                             ×
@@ -242,7 +274,11 @@ const Sidebar = () => {
 
                 {usersLoading && users.length === 0 && (
                     <div className="flex min-h-32 items-center justify-center">
-                        <p className="text-sm text-[var(--lumo-text-muted)]">
+                        <p
+                            className="text-sm text-[var(--lumo-text-muted)]"
+                            role="status"
+                            aria-live="polite"
+                        >
                             Loading conversations...
                         </p>
                     </div>
@@ -250,7 +286,7 @@ const Sidebar = () => {
 
                 {!usersLoading && usersError && users.length === 0 && (
                     <div className="mx-2 flex min-h-36 flex-col items-center justify-center rounded-2xl border border-red-400/10 bg-red-400/[0.03] px-4 text-center">
-                        <p className="text-sm text-red-300">
+                        <p className="text-sm text-red-300" role="alert">
                             Couldn't load conversations.
                         </p>
 
@@ -283,7 +319,11 @@ const Sidebar = () => {
                         </div>
                     )}
 
-                <div className="space-y-1">
+                <div
+                    className="space-y-1"
+                    role="list"
+                    aria-label="Conversations"
+                >
                     {filteredUsers.map((user) => {
                         const isOnline = onlineUsers.includes(user._id);
                         const isSelected = selectedUser?._id === user._id;
@@ -294,7 +334,10 @@ const Sidebar = () => {
                                 type="button"
                                 key={user._id}
                                 onClick={() => setSelectedUser(user)}
-                                className={`lumo-interactive group relative flex w-full items-center gap-2.5 rounded-2xl border px-2.5 py-2.5 text-left sm:gap-3 sm:px-3 sm:py-3 ${isSelected
+                                role="listitem"
+                                aria-current={isSelected ? "true" : undefined}
+                                aria-label={`${user.fullName}, ${isOnline ? "online" : "offline"}${unreadCount > 0 ? `, ${unreadCount} unread message${unreadCount === 1 ? "" : "s"}` : ""}`}
+                                className={`lumo-interactive group relative flex min-h-14 w-full items-center gap-2.5 rounded-2xl border px-2.5 py-2.5 text-left sm:gap-3 sm:px-3 sm:py-3 ${isSelected
                                     ? "border-violet-400/20 bg-violet-500/[0.12]"
                                     : "border-transparent hover:border-white/[0.05] hover:bg-white/[0.045]"
                                     }`}
@@ -309,6 +352,7 @@ const Sidebar = () => {
                                     />
 
                                     <span
+                                        aria-hidden="true"
                                         className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#111116] ${isOnline
                                             ? "bg-[var(--lumo-success)]"
                                             : "bg-zinc-600"

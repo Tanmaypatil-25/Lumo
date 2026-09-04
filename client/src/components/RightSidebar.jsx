@@ -86,6 +86,7 @@ ease-in-out
     `
         }
   `}
+      aria-label="Conversation details"
     >
 
       <div
@@ -115,6 +116,7 @@ ease-in-out
       hover:bg-white/[0.07]
       hover:text-white
       active:scale-95
+      motion-reduce:transition-none
     "
           aria-label="Back to conversation"
         >
@@ -204,6 +206,7 @@ md:p-5
               />
 
               <span
+                aria-hidden="true"
                 className={`absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-[3px] border-[#17171d] ${isOnline
                   ? "bg-green-400"
                   : "bg-zinc-600"
@@ -223,6 +226,7 @@ md:p-5
             <div className="mt-1 flex items-center gap-1.5">
 
               <span
+                aria-hidden="true"
                 className={`h-1.5 w-1.5 rounded-full ${isOnline
                   ? "bg-green-400"
                   : "bg-zinc-600"
@@ -230,6 +234,8 @@ md:p-5
               />
 
               <span
+                role="status"
+                aria-live="polite"
                 className={`text-xs font-medium ${isOnline
                   ? "text-green-400"
                   : "text-zinc-500"
@@ -256,15 +262,21 @@ md:p-5
 
 
         {/* MEDIA SECTION */}
-        <section className="mt-6 md:mt-7">
+        <section
+          className="mt-6 md:mt-7"
+          aria-labelledby="shared-media-heading"
+        >
 
           <div className="mb-3 flex items-center justify-between">
 
             <div>
 
-              <p className="text-[13px] font-semibold text-zinc-200">
+              <h3
+                id="shared-media-heading"
+                className="text-[13px] font-semibold text-zinc-200"
+              >
                 Shared media
-              </p>
+              </h3>
 
               <p className="mt-0.5 text-[11px] text-zinc-500">
                 {msgImages.length === 0
@@ -280,6 +292,7 @@ md:p-5
 
             {msgImages.length > 0 && (
               <div
+                aria-hidden="true"
                 className="
                   flex
                   h-8
@@ -382,7 +395,11 @@ md:p-5
 
           ) : (
 
-            <div className="grid grid-cols-2 gap-2">
+            <div
+              className="grid grid-cols-2 gap-2"
+              role="list"
+              aria-label="Shared images"
+            >
 
               {msgImages.map((image) => (
 
@@ -392,6 +409,7 @@ md:p-5
                   onClick={() =>
                     openImage(image.url)
                   }
+                  role="listitem"
                   className="
                     group
                     relative
@@ -404,8 +422,9 @@ md:p-5
                     transition
                     hover:border-white/[0.12]
                     active:scale-[0.98]
+                    motion-reduce:transition-none
                   "
-                  aria-label="Open shared image"
+                  aria-label="Open shared image in a new tab"
                 >
 
                   <img
@@ -418,6 +437,8 @@ md:p-5
                       transition-transform
                       duration-300
                       group-hover:scale-[1.04]
+                      motion-reduce:transform-none
+                      motion-reduce:transition-none
                     "
                   />
 
@@ -436,6 +457,9 @@ md:p-5
                       duration-200
                       group-hover:bg-black/25
                       group-hover:opacity-100
+                      group-focus-visible:bg-black/25
+                      group-focus-visible:opacity-100
+                      motion-reduce:transition-none
                     "
                   >
 
@@ -516,6 +540,7 @@ md:p-5
           className="
             lumo-interactive
             flex
+            min-h-11
             w-full
             items-center
             justify-center
@@ -534,6 +559,7 @@ md:p-5
             hover:bg-red-500/[0.11]
             hover:text-red-200
             active:scale-[0.99]
+            motion-reduce:transition-none
           "
         >
 

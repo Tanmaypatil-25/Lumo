@@ -303,6 +303,7 @@ const ProfilePage = () => {
                   bg-white/[0.035]
                   text-zinc-400
                   transition
+                  motion-reduce:transition-none
                   hover:bg-white/[0.07]
                   hover:text-white
                   disabled:pointer-events-none
@@ -383,6 +384,7 @@ const ProfilePage = () => {
                   font-medium
                   text-zinc-400
                   transition
+                  motion-reduce:transition-none
                   hover:bg-white/[0.07]
                   hover:text-zinc-200
                   disabled:pointer-events-none
@@ -401,6 +403,7 @@ const ProfilePage = () => {
                   !name.trim() ||
                   !bio.trim()
                 }
+                aria-busy={saving}
                 className="
                   lumo-interactive
                   inline-flex
@@ -419,6 +422,7 @@ const ProfilePage = () => {
                   shadow-lg
                   shadow-violet-950/25
                   transition
+                  motion-reduce:transition-none
                   hover:bg-violet-500
                   disabled:pointer-events-none
                   disabled:opacity-50
@@ -431,6 +435,7 @@ const ProfilePage = () => {
                         h-4
                         w-4
                         animate-spin
+                        motion-reduce:animate-none
                         rounded-full
                         border-2
                         border-white/25
@@ -477,6 +482,8 @@ const ProfilePage = () => {
             <form
               id="profile-form"
               onSubmit={handleSubmit}
+              aria-labelledby="profile-form-heading"
+              aria-busy={saving}
               className="
                 p-4
                 sm:p-7
@@ -489,7 +496,8 @@ const ProfilePage = () => {
                   max-w-xl
                 "
               >
-                <p
+                <h2
+                  id="profile-preview-heading"
                   className="
                     text-xs
                     font-semibold
@@ -499,9 +507,10 @@ const ProfilePage = () => {
                   "
                 >
                   Personal information
-                </p>
+                </h2>
 
                 <h2
+                  id="profile-form-heading"
                   className="
                     mt-2
                     text-[22px]
@@ -580,6 +589,7 @@ const ProfilePage = () => {
                       />
 
                       <span
+                        aria-hidden="true"
                         className="
                           absolute
                           -bottom-1
@@ -666,6 +676,7 @@ const ProfilePage = () => {
                             font-medium
                             text-violet-200
                             transition
+                            motion-reduce:transition-none
                             hover:bg-violet-500/[0.16]
                           "
                         >
@@ -700,6 +711,8 @@ const ProfilePage = () => {
                             onChange={
                               handleImageSelect
                             }
+                            disabled={saving}
+                            aria-label="Choose profile photo"
                             hidden
                           />
                         </label>
@@ -721,6 +734,7 @@ const ProfilePage = () => {
                               font-medium
                               text-zinc-400
                               transition
+                              motion-reduce:transition-none
                               hover:bg-white/[0.07]
                               hover:text-zinc-200
                             "
@@ -760,6 +774,7 @@ const ProfilePage = () => {
                       bg-white/[0.035]
                       px-3.5
                       transition
+                      motion-reduce:transition-none
                       focus-within:border-violet-400/30
                       sm:px-4
                       focus-within:bg-white/[0.05]
@@ -799,6 +814,7 @@ const ProfilePage = () => {
                       maxLength={50}
                       autoComplete="name"
                       value={name}
+                      disabled={saving}
                       onChange={(event) =>
                         setName(
                           event.target.value
@@ -842,6 +858,7 @@ const ProfilePage = () => {
                     </label>
 
                     <span
+                      id="profile-bio-count"
                       className="
                         text-xs
                         text-zinc-600
@@ -858,6 +875,7 @@ const ProfilePage = () => {
                       border-white/[0.08]
                       bg-white/[0.035]
                       transition
+                      motion-reduce:transition-none
                       focus-within:border-violet-400/30
                       focus-within:bg-white/[0.05]
                     "
@@ -868,6 +886,8 @@ const ProfilePage = () => {
                       maxLength={160}
                       rows={4}
                       value={bio}
+                      disabled={saving}
+                      aria-describedby="profile-bio-count"
                       onChange={(event) =>
                         setBio(
                           event.target.value
@@ -913,6 +933,7 @@ const ProfilePage = () => {
                     }
                     disabled={saving}
                     className="
+                      lumo-interactive
                       rounded-xl
                       border
                       border-white/[0.08]
@@ -922,6 +943,10 @@ const ProfilePage = () => {
                       text-sm
                       font-medium
                       text-zinc-400
+                      transition
+                      motion-reduce:transition-none
+                      disabled:pointer-events-none
+                      disabled:opacity-50
                     "
                   >
                     Cancel
@@ -934,7 +959,9 @@ const ProfilePage = () => {
                       !name.trim() ||
                       !bio.trim()
                     }
+                    aria-busy={saving}
                     className="
+                      lumo-interactive
                       rounded-xl
                       bg-violet-600
                       px-4
@@ -942,6 +969,9 @@ const ProfilePage = () => {
                       text-sm
                       font-semibold
                       text-white
+                      transition
+                      motion-reduce:transition-none
+                      disabled:pointer-events-none
                       disabled:opacity-50
                     "
                   >
@@ -956,6 +986,7 @@ const ProfilePage = () => {
             {/* Preview */}
 
             <aside
+              aria-labelledby="profile-preview-heading"
               className="
                 border-t
                 border-white/[0.07]
@@ -1031,6 +1062,7 @@ const ProfilePage = () => {
                       />
 
                       <span
+                        aria-hidden="true"
                         className="
                           absolute
                           -bottom-1

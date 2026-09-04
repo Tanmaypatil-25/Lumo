@@ -253,6 +253,7 @@ const LoginPage = () => {
             >
 
               <span
+                aria-hidden="true"
                 className="
                   h-1.5
                   w-1.5
@@ -518,7 +519,8 @@ const LoginPage = () => {
 
                   <div>
 
-                    <p
+                    <h1
+                      id="auth-heading"
                       className="
                         text-[22px]
                         font-semibold
@@ -534,7 +536,7 @@ const LoginPage = () => {
                             : "Create your account"
                           : "Welcome back"
                       }
-                    </p>
+                    </h1>
 
 
                     <p
@@ -579,6 +581,7 @@ const LoginPage = () => {
                           bg-white/[0.035]
                           text-zinc-400
                           transition
+                          motion-reduce:transition-none
                           hover:border-white/[0.10]
                           hover:bg-white/[0.06]
                           hover:text-white
@@ -611,7 +614,11 @@ const LoginPage = () => {
                 {/* Signup progress */}
                 {
                   isSignup && (
-                    <div className="mt-5 sm:mt-6">
+                    <div
+                      className="mt-5 sm:mt-6"
+                      role="group"
+                      aria-label={`Sign up progress: step ${isDataSubmitted ? 2 : 1} of 2`}
+                    >
 
                       <div className="flex gap-2">
 
@@ -625,7 +632,7 @@ const LoginPage = () => {
                         />
 
                         <div
-                          className={`h-1 flex-1 rounded-full transition ${isDataSubmitted
+                          className={`h-1 flex-1 rounded-full transition motion-reduce:transition-none ${isDataSubmitted
                             ? "bg-violet-500"
                             : "bg-white/[0.08]"
                             }`}
@@ -666,6 +673,8 @@ const LoginPage = () => {
 
               <form
                 onSubmit={onSubmitHandler}
+                aria-labelledby="auth-heading"
+                aria-busy={submitting}
                 className="mt-6 sm:mt-7"
               >
 
@@ -702,6 +711,7 @@ const LoginPage = () => {
                             bg-white/[0.035]
                             px-3.5
                             transition
+                            motion-reduce:transition-none
                             sm:px-4
                             focus-within:border-violet-400/30
                             focus-within:bg-white/[0.05]
@@ -791,6 +801,7 @@ const LoginPage = () => {
                             bg-white/[0.035]
                             px-4
                             transition
+                            motion-reduce:transition-none
                             focus-within:border-violet-400/30
                             focus-within:bg-white/[0.05]
                           "
@@ -882,6 +893,7 @@ const LoginPage = () => {
                             bg-white/[0.035]
                             px-4
                             transition
+                            motion-reduce:transition-none
                             focus-within:border-violet-400/30
                             focus-within:bg-white/[0.05]
                           "
@@ -953,17 +965,20 @@ const LoginPage = () => {
                             }
                             className="
     flex
-    h-8
-    w-8
+    h-10
+    w-10
     shrink-0
     items-center
     justify-center
     rounded-lg
     text-zinc-500
     transition
+    motion-reduce:transition-none
     hover:bg-white/[0.05]
     hover:text-zinc-300
   "
+                            aria-pressed={showPassword}
+                            aria-controls="password"
                             aria-label={
                               showPassword
                                 ? "Hide password"
@@ -1066,6 +1081,7 @@ const LoginPage = () => {
 
 
                           <span
+                            id="bio-character-count"
                             className="
                               text-[10px]
                               text-zinc-600
@@ -1089,6 +1105,7 @@ const LoginPage = () => {
                           maxLength={160}
                           placeholder="Tell people a little about yourself..."
                           required
+                          aria-describedby="bio-character-count"
                           className="
                             min-h-[115px]
                             w-full
@@ -1105,6 +1122,7 @@ const LoginPage = () => {
                             text-zinc-200
                             outline-none
                             transition
+                            motion-reduce:transition-none
                             placeholder:text-zinc-600
                             focus:border-violet-400/30
                             focus:bg-white/[0.05]
@@ -1139,8 +1157,8 @@ const LoginPage = () => {
                       required
                       className="
                           mt-1
-                          h-4
-                          w-4
+                          h-[18px]
+                          w-[18px]
                           shrink-0
                           accent-violet-500
                         "
@@ -1160,6 +1178,7 @@ const LoginPage = () => {
                 <button
                   type="submit"
                   disabled={submitting}
+                  aria-busy={submitting}
                   className="
                     lumo-interactive
                     mt-5
@@ -1178,6 +1197,7 @@ const LoginPage = () => {
                     text-white
                     shadow-[0_8px_30px_rgba(124,58,237,0.18)]
                     transition
+                    motion-reduce:transition-none
                     hover:bg-violet-500
                     active:scale-[0.99]
                     disabled:cursor-not-allowed
@@ -1192,7 +1212,7 @@ const LoginPage = () => {
                         <svg
                           viewBox="0 0 24 24"
                           fill="none"
-                          className="h-[17px] w-[17px] animate-spin"
+                          className="h-[17px] w-[17px] animate-spin motion-reduce:animate-none"
                           aria-hidden="true"
                         >
                           <circle
@@ -1271,9 +1291,13 @@ const LoginPage = () => {
                           type="button"
                           onClick={switchToLogin}
                           className="
+                            min-h-10
+                            rounded-lg
+                            px-1
                             font-medium
                             text-violet-300
                             transition
+                            motion-reduce:transition-none
                             hover:text-violet-200
                           "
                         >
@@ -1292,9 +1316,13 @@ const LoginPage = () => {
                           type="button"
                           onClick={switchToSignup}
                           className="
+                            min-h-10
+                            rounded-lg
+                            px-1
                             font-medium
                             text-violet-300
                             transition
+                            motion-reduce:transition-none
                             hover:text-violet-200
                           "
                         >

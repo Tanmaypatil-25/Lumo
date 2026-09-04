@@ -44,6 +44,7 @@ const ChatContainer = ({
   const messageInputRef = useRef(null);
   const searchPanelRef = useRef(null);
   const searchButtonRef = useRef(null);
+  const messageActionsRef = useRef(null);
 
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -72,6 +73,9 @@ const ChatContainer = ({
 
   const [messageToDelete, setMessageToDelete] = useState(null);
 
+  const [activeMessageActionsId, setActiveMessageActionsId] =
+    useState(null);
+
   const [imagePreview, setImagePreview] = useState("");
 
   const [highlightedMessageId, setHighlightedMessageId] =
@@ -98,6 +102,8 @@ const ChatContainer = ({
   };
 
   const startEditing = (message) => {
+    setActiveMessageActionsId(null);
+
     setEditingMessageId(
       message._id
     );
@@ -417,6 +423,7 @@ const ChatContainer = ({
     setSearchOpen(false);
     setSearchQuery("");
     setSearchResults([]);
+    setActiveMessageActionsId(null);
 
     const controller = new AbortController();
 
@@ -577,6 +584,69 @@ const ChatContainer = ({
     pendingMessageId,
     messages
   ]);
+
+  useEffect(() => {
+    if (!activeMessageActionsId) {
+      return;
+    }
+
+    const handleClickOutsideMessageActions = (event) => {
+      if (
+        messageActionsRef.current &&
+        !messageActionsRef.current.contains(event.target)
+      ) {
+        setActiveMessageActionsId(null);
+      }
+    };
+
+    document.addEventListener(
+      "mousedown",
+      handleClickOutsideMessageActions
+    );
+
+    document.addEventListener(
+      "touchstart",
+      handleClickOutsideMessageActions
+    );
+
+    return () => {
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutsideMessageActions
+      );
+
+      document.removeEventListener(
+        "touchstart",
+        handleClickOutsideMessageActions
+      );
+    };
+  }, [activeMessageActionsId]);
+
+
+  useEffect(() => {
+    if (!messageToDelete) {
+      return;
+    }
+
+    const handleDeleteDialogKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setMessageToDelete(null);
+      }
+    };
+
+    document.addEventListener(
+      "keydown",
+      handleDeleteDialogKeyDown
+    );
+
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        handleDeleteDialogKeyDown
+      );
+    };
+  }, [messageToDelete]);
+
 
   useEffect(() => {
     if (!searchOpen) {
@@ -796,6 +866,8 @@ const ChatContainer = ({
       {searchOpen && (
         <section
           ref={searchPanelRef}
+          role="search"
+          aria-label="Search messages in this conversation"
           className="relative z-10 shrink-0 border-b border-white/[0.06] bg-white/[0.018] px-4 py-3 backdrop-blur-xl md:px-5"
         >
 
@@ -826,6 +898,7 @@ const ChatContainer = ({
                   setSearchQuery(event.target.value);
                 }}
                 placeholder="Search in conversation"
+                aria-label="Search messages"
                 className="min-w-0 flex-1 bg-transparent text-sm text-[var(--lumo-text-primary)] outline-none placeholder:text-[var(--lumo-text-muted)]"
                 autoFocus
               />
@@ -1028,7 +1101,7 @@ const ChatContainer = ({
               <div
                 id={`message-${msg._id}`}
                 key={msg._id}
-                className={`group flex w-full px-1 transition-all duration-500 ${isOwnMessage
+                className={`group flex w-full px-1 transition-all duration-500 motion-reduce:transition-none ${isOwnMessage
                   ? "justify-end"
                   : "justify-start"
                   } ${isFirstInGroup
@@ -1079,7 +1152,7 @@ const ChatContainer = ({
                     {/* IMAGE MESSAGE */}
                     {msg.image ? (
                       <div
-                        className={`relative overflow-hidden rounded-[20px] border p-1.5 transition-all duration-200 ${isOwnMessage
+                        className={`relative w-fit max-w-[280px] overflow-hidden rounded-[20px] border p-1.5 transition-all duration-200 motion-reduce:transition-none sm:max-w-[310px] md:max-w-[330px] ${isOwnMessage
                           ? `
     ${isFirstInGroup && isLastInGroup
                             ? "rounded-[20px] rounded-br-[6px]"
@@ -1124,27 +1197,28 @@ const ChatContainer = ({
                         />
 
                         {/* Image */}
-                        <div className="overflow-hidden rounded-[15px]">
+                        <div className="overflow-hidden rounded-[15px] bg-black/20">
                           <img
                             src={msg.image}
                             alt="Shared media"
                             className="
-          block
-          max-h-[380px]
-          w-full
-          max-w-full
-          object-cover
-          md:max-w-[320px]
-          transition-transform
-          duration-300
-          hover:scale-[1.015]
-        "
+    block
+    h-auto
+    max-h-[260px]
+    w-full
+    object-cover
+    transition-transform
+    duration-300
+    hover:scale-[1.015]
+    motion-reduce:transform-none
+    motion-reduce:transition-none
+  "
                           />
                         </div>
 
                         {/* EDIT IMAGE CAPTION */}
                         {editingMessageId === msg._id ? (
-                          <div className="px-2 pb-2 pt-2.5">
+                          <div className="w-full px-2.5 pb-2 pt-2.5">
 
                             <input
                               type="text"
@@ -1206,7 +1280,7 @@ const ChatContainer = ({
                         ) : (
                           msg.text && (
                             <p
-                              className={`max-w-full whitespace-pre-wrap break-words px-2.5 pb-2 pt-2.5 text-[14px] leading-[1.5] md:max-w-[320px] ${isOwnMessage
+                              className={`w-full whitespace-pre-wrap break-words px-3 pb-2.5 pt-2.5 text-[14px] leading-[1.45] ${isOwnMessage
                                 ? "text-zinc-50"
                                 : "text-zinc-200"
                                 }`}
@@ -1392,12 +1466,17 @@ const ChatContainer = ({
       top-1/2
       z-20
       mr-2
+      hidden
       -translate-y-1/2
       opacity-0
       transition-all
       duration-200
-      group-hover:pointer-events-auto
-      group-hover:opacity-100
+      motion-reduce:transition-none
+      md:block
+      md:group-hover:pointer-events-auto
+      md:group-hover:opacity-100
+      md:group-focus-within:pointer-events-auto
+      md:group-focus-within:opacity-100
     "
                       >
                         <div
@@ -1538,6 +1617,183 @@ const ChatContainer = ({
                       </div>
                     )}
 
+                    {/* MOBILE / TOUCH MESSAGE ACTIONS */}
+                    {isOwnMessage && (
+                      <div className="mt-1 flex justify-end md:hidden">
+                        <div
+                          ref={
+                            activeMessageActionsId === msg._id
+                              ? messageActionsRef
+                              : null
+                          }
+                          className="relative"
+                        >
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setActiveMessageActionsId(
+                                (currentId) =>
+                                  currentId === msg._id
+                                    ? null
+                                    : msg._id
+                              )
+                            }
+                            className="
+                              lumo-interactive
+                              flex
+                              h-8
+                              w-8
+                              items-center
+                              justify-center
+                              rounded-lg
+                              text-zinc-500
+                              transition
+                              hover:bg-white/[0.06]
+                              hover:text-zinc-200
+                              active:scale-95
+                              motion-reduce:transition-none
+                            "
+                            aria-label="Message actions"
+                            aria-expanded={
+                              activeMessageActionsId === msg._id
+                            }
+                          >
+                            <svg
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              className="h-[17px] w-[17px]"
+                              aria-hidden="true"
+                            >
+                              <circle cx="6" cy="12" r="1.4" fill="currentColor" />
+                              <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+                              <circle cx="18" cy="12" r="1.4" fill="currentColor" />
+                            </svg>
+                          </button>
+
+                          {activeMessageActionsId === msg._id && (
+                            <div
+                              className="
+                                absolute
+                                bottom-10
+                                right-0
+                                z-30
+                                flex
+                                items-center
+                                gap-1
+                                rounded-xl
+                                border
+                                border-white/[0.09]
+                                bg-[#17171D]/95
+                                p-1
+                                shadow-[0_10px_34px_rgba(0,0,0,0.34)]
+                                backdrop-blur-xl
+                              "
+                              role="menu"
+                              aria-label="Message actions"
+                            >
+                              {msg.text && (
+                                <button
+                                  type="button"
+                                  onClick={() => startEditing(msg)}
+                                  className="
+                                    lumo-interactive
+                                    flex
+                                    h-9
+                                    w-9
+                                    items-center
+                                    justify-center
+                                    rounded-lg
+                                    text-zinc-300
+                                    transition
+                                    hover:bg-white/[0.07]
+                                    hover:text-white
+                                    active:scale-95
+                                    motion-reduce:transition-none
+                                  "
+                                  aria-label="Edit message"
+                                  role="menuitem"
+                                >
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    className="h-[16px] w-[16px]"
+                                    aria-hidden="true"
+                                  >
+                                    <path
+                                      d="M13.5 6.5L17.5 10.5"
+                                      stroke="currentColor"
+                                      strokeWidth="1.7"
+                                      strokeLinecap="round"
+                                    />
+                                    <path
+                                      d="M4.5 19.5L8.3 18.7L18.2 8.8C19 8 19 6.8 18.2 6L18 5.8C17.2 5 16 5 15.2 5.8L5.3 15.7L4.5 19.5Z"
+                                      stroke="currentColor"
+                                      strokeWidth="1.7"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveMessageActionsId(null);
+                                  setMessageToDelete(msg);
+                                }}
+                                className="
+                                  lumo-interactive
+                                  flex
+                                  h-9
+                                  w-9
+                                  items-center
+                                  justify-center
+                                  rounded-lg
+                                  text-zinc-300
+                                  transition
+                                  hover:bg-red-500/[0.10]
+                                  hover:text-red-300
+                                  active:scale-95
+                                  motion-reduce:transition-none
+                                "
+                                aria-label="Delete message"
+                                role="menuitem"
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  className="h-[16px] w-[16px]"
+                                  aria-hidden="true"
+                                >
+                                  <path
+                                    d="M8 8V18M12 8V18M16 8V18"
+                                    stroke="currentColor"
+                                    strokeWidth="1.7"
+                                    strokeLinecap="round"
+                                  />
+                                  <path
+                                    d="M5 6H19M9 6L10 4H14L15 6"
+                                    stroke="currentColor"
+                                    strokeWidth="1.7"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M7 6L8 20H16L17 6"
+                                    stroke="currentColor"
+                                    strokeWidth="1.7"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                 </div>
               </div>
@@ -1568,6 +1824,10 @@ const ChatContainer = ({
           }
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-message-title"
+            aria-describedby="delete-message-description"
             className="
         w-full
         max-w-[360px]
@@ -1643,11 +1903,17 @@ const ChatContainer = ({
               </svg>
             </div>
 
-            <h3 className="text-[16px] font-semibold text-zinc-100">
+            <h3
+              id="delete-message-title"
+              className="text-[16px] font-semibold text-zinc-100"
+            >
               Delete message?
             </h3>
 
-            <p className="mt-1.5 text-[13px] leading-5 text-zinc-400">
+            <p
+              id="delete-message-description"
+              className="mt-1.5 text-[13px] leading-5 text-zinc-400"
+            >
               This message will be permanently deleted
               for everyone in this conversation.
             </p>
@@ -1978,6 +2244,7 @@ md:py-2
                 }
               }}
               placeholder="Message..."
+              aria-label="Message"
               disabled={sending}
               className="max-h-[120px] min-h-[40px] min-w-0 flex-1 resize-none bg-transparent px-2 py-2.5
                           text-[14px]
