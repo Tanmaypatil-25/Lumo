@@ -19,11 +19,28 @@ A modern, full-stack real-time messaging application built with the **MERN stack
 <br />
 
 <div align="center">
+
+### Desktop Experience
+
   <img
     src="./docs/screenshots/lumo-desktop-chat.png"
     alt="Lumo real-time messaging interface showing conversations, read receipts, presence and media sharing"
     width="100%"
   />
+</div>
+
+<br />
+
+<div align="center">
+
+### Responsive Mobile Experience
+
+<img
+  src="./docs/screenshots/lumo-mobile-chat.png"
+  alt="Lumo responsive real-time conversation interface on mobile"
+  width="320"
+/>
+
 </div>
 
 <br />
