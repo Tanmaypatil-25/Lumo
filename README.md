@@ -85,6 +85,16 @@ What started as a MERN + Socket.IO chat application has evolved into a more prod
 
 ## Features
 
+- Secure real-time one-to-one messaging
+- Typing indicators, online presence and read receipts
+- Message editing, deletion and conversation search
+- Cursor-based message history pagination
+- Cloudinary-powered image sharing
+- Responsive, accessible Lumo 2.0 interface
+
+<details>
+<summary><strong>View complete feature list</strong></summary>
+
 ### Real-Time Messaging
 
 - Real-time one-to-one messaging using Socket.IO
@@ -185,6 +195,8 @@ What started as a MERN + Socket.IO chat application has evolved into a more prod
 - Reduced-motion support
 - Improved touch targets
 - Keyboard and touch-friendly message actions
+
+</details>
 
 ---
 
