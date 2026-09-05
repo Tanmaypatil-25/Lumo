@@ -12,9 +12,21 @@ A modern, full-stack real-time messaging application built with the **MERN stack
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-8B5CF6?style=for-the-badge&logo=vercel&logoColor=white)](https://lumo-chat-tanmay.vercel.app/)
 [![GitHub](https://img.shields.io/badge/Source_Code-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Tanmaypatil-25/Lumo)
-[![Version](https://img.shields.io/badge/Version-2.0.0-8B5CF6?style=for-the-badge)](https://github.com/Tanmaypatil-25/Lumo/releases)
+[![Version](https://img.shields.io/badge/Version-2.0.1-8B5CF6?style=for-the-badge)](https://github.com/Tanmaypatil-25/Lumo/releases/tag/v2.0.1)
 
 </div>
+
+<br />
+
+<div align="center">
+  <img
+    src="./docs/screenshots/lumo-desktop-chat.png"
+    alt="Lumo real-time messaging interface showing conversations, read receipts, presence and media sharing"
+    width="100%"
+  />
+</div>
+
+<br />
 
 ---
 
@@ -429,6 +441,15 @@ Production Socket.IO connections use authenticated WebSocket communication betwe
 ---
 
 ## Releases
+
+### Lumo v2.0.1
+
+A focused patch release that improves mobile viewport stability:
+
+- Fixed mobile Chrome viewport sizing
+- Kept the conversation header and composer visible
+- Prevented outer-page overscroll
+- Improved layout stability when browser controls expand or collapse
 
 ### Lumo v2.0.0
 
