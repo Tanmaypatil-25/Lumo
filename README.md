@@ -30,6 +30,32 @@ A modern, full-stack real-time messaging application built with the **MERN stack
 
 ---
 
+## Try the Live Demo
+
+Experience Lumo's real-time messaging by opening the application in two browser windows and signing in with the demo accounts below.
+
+| Account | Email | Password |
+| --- | --- | --- |
+| Aarav Mehta | `aarav.demo@example.com` | `LumoDemo@2026` |
+| Maya Sharma | `maya.demo@example.com` | `LumoDemo@2026` |
+
+> Demo conversations are shared publicly. Please avoid entering personal or sensitive information.
+
+### Quick Demo Flow
+
+1. Open Lumo in two browser windows.
+2. Sign in using Aarav and Maya’s demo accounts.
+3. Send a message to observe real-time delivery, typing indicators and Seen status.
+4. Try image sharing, message search, editing and deletion.
+
+<div align="center">
+
+[![Launch Lumo](https://img.shields.io/badge/Launch_Lumo-8B5CF6?style=for-the-badge&logo=vercel&logoColor=white)](https://lumo-chat-tanmay.vercel.app/)
+
+</div>
+
+---
+
 ## About Lumo
 
 **Lumo** is a full-stack real-time messaging application designed to provide a fast, secure, and polished communication experience.
