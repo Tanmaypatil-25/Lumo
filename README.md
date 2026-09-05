@@ -431,19 +431,35 @@ npm install
 
 ### 4. Configure Environment Variables
 
-Create the required environment files for the client and server and provide your own credentials and configuration values.
+Create local environment files from the provided examples:
 
-Typical configuration includes:
-
-```text
-MongoDB connection
-JWT secret
-Cloudinary credentials
-Frontend URL
-Backend/API URL
+```bash
+cp client/.env.example client/.env
+cp server/.env.example server/.env
 ```
 
-> Never commit `.env` files or private credentials to the repository.
+Configure the frontend:
+
+```env
+VITE_BACKEND_URL=http://localhost:5000
+```
+
+Configure the backend:
+
+```env
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_secure_jwt_secret
+
+CLIENT_URL=http://localhost:5173
+
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+PORT=5000
+```
+
+> Keep `.env` files private. Only the placeholder `.env.example` files should be committed.
 
 ### 5. Start the Backend
 
